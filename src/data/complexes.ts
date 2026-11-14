@@ -1,7 +1,7 @@
 import { ComplexData } from '../types/game';
 
-// 15개 재건축 단지 기준 데이터 (1~14단지 실제 서울 목동 신시가지 정비계획 공개데이터 기반, 15단지 게임 밸런스용 가상 단지)
-// 출처: 서울시 정비사업 정보몽땅, 서울시 도시계획 정비구역 고시, 양천구청 재건축사업과 공람공고 (2026년 기준 공개 정비계획 참고)
+// 15개 재건축 단지 기준 데이터 (1~14단지 실제 서울 목동 신시가지 정비계획 공개데이터 기반, 15단지 밸런스 가상 단지)
+// 조합 AI 성향, 3대 유권자 계층 비율, 입찰 규칙, 인접 단지 네트워크 그래프 반영
 // '구역' 용어 절대 배제, 오직 '단지'로 표기
 
 export const RAW_COMPLEX_DATA: ComplexData[] = [
@@ -11,7 +11,7 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     originalUnits: 1882,
     plannedUnits: 3500,
     expectedCost: 23500, // 2조 3500억원
-    baseExpectedProfitMargin: 4.8, // 4.8%
+    baseExpectedProfitMargin: 4.8,
     riskLevel: 'LOW',
     startTurn: 1,
     stage: 'pre_sales',
@@ -19,6 +19,18 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '우수한 학군과 쾌적한 주거환경을 갖춘 정통 대단지. 조합원 성향이 비교적 온건하고 시공사의 시공실적과 재무안정성을 중시합니다.',
     dataSource: '서울시 정비계획 결정고시 및 양천구 정비사업 공람 (목동 1단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'conservative', // 보수적 의사결정형
+    voterSegments: {
+      brandLoyalistRatio: 35,
+      pragmatistRatio: 45,
+      floatingVoterRatio: 20,
+    },
+    biddingRules: {
+      consortiumAllowed: false, // 단독 입찰 원칙
+      bidDepositAmount: 400,    // 400억원
+      proposalPrepCost: 15,     // 15억원
+    },
+    adjacentComplexIds: [2, 6],
     sentimentProfile: {
       brandWeight: 25,
       costSensitivity: 20,
@@ -43,6 +55,18 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '용적률과 일반분양 수익률에 민감한 조합원들이 다수 포진해 있습니다. 저금리 사업비 조달과 유리한 이주비 LTV 조건을 적극 요구합니다.',
     dataSource: '서울시 도시계획위원회 심의결과 (목동 2단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'pragmatic_profit', // 실리 추구형
+    voterSegments: {
+      brandLoyalistRatio: 20,
+      pragmatistRatio: 60,
+      floatingVoterRatio: 20,
+    },
+    biddingRules: {
+      consortiumAllowed: false,
+      bidDepositAmount: 350,
+      proposalPrepCost: 12,
+    },
+    adjacentComplexIds: [1, 3, 5],
     sentimentProfile: {
       brandWeight: 15,
       costSensitivity: 25,
@@ -67,6 +91,18 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '종상향 조건과 공공기여 비율을 둘러싸고 조합 내부의 갑론을박이 치열합니다. 사업 지연 위험이 높지만 진입 장벽이 있어 틈새 공략이 가능합니다.',
     dataSource: '서울시 정비계획 고시안 (목동 3단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'internal_feud', // 내부 갈등형
+    voterSegments: {
+      brandLoyalistRatio: 25,
+      pragmatistRatio: 35,
+      floatingVoterRatio: 40, // 높은 부동층 비중
+    },
+    biddingRules: {
+      consortiumAllowed: true, // 갈등 완화를 위해 컨소시엄 허용
+      bidDepositAmount: 300,
+      proposalPrepCost: 10,
+    },
+    adjacentComplexIds: [2, 4, 7],
     sentimentProfile: {
       brandWeight: 20,
       costSensitivity: 15,
@@ -91,6 +127,18 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '규모가 상대적으로 아담하여 공사 관리가 수월하고 공사비 회수가 빠릅니다. 중견사들도 캐파 부담 없이 총력전을 펼칠 수 있는 격전지입니다.',
     dataSource: '서울시 정비사업 정보몽땅 정비계획서 (목동 4단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'pragmatic_compromise', // 실용적 타협형
+    voterSegments: {
+      brandLoyalistRatio: 15,
+      pragmatistRatio: 65,
+      floatingVoterRatio: 20,
+    },
+    biddingRules: {
+      consortiumAllowed: false,
+      bidDepositAmount: 250,
+      proposalPrepCost: 8,
+    },
+    adjacentComplexIds: [3, 7, 8],
     sentimentProfile: {
       brandWeight: 15,
       costSensitivity: 35,
@@ -115,6 +163,19 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '지역 내 최고 수준의 소득층이 거주하며 유명 해외 건축가 특화설계와 최고급 커뮤니티 시설을 요구합니다. 공사비보다는 명품 브랜드를 우선시합니다.',
     dataSource: '서울시 도시계획위원회 정비계획 고시 (목동 5단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'brand_centric', // 브랜드 중시형
+    voterSegments: {
+      brandLoyalistRatio: 65, // 압도적 브랜드 충성도
+      pragmatistRatio: 20,
+      floatingVoterRatio: 15,
+    },
+    biddingRules: {
+      consortiumAllowed: false, // 컨소시엄 절대 불허
+      bidDepositAmount: 500,
+      proposalPrepCost: 25,
+      mandatoryDesignItem: '스카이브릿지 및 해외 유명 건축가 입면 특화 필수',
+    },
+    adjacentComplexIds: [2, 6, 9],
     sentimentProfile: {
       brandWeight: 50,
       costSensitivity: 5,
@@ -139,6 +200,18 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '가장 먼저 정비계획 확정과 인허가를 매듭지은 모범 단지. 턴 초반에 빠르게 시공사가 결정될 예정이므로 초반 실적 확보의 교두보입니다.',
     dataSource: '서울시 신속통합기획 확정안 및 양천구청 고시 (목동 6단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'fast_track', // 빠른 사업 추진형
+    voterSegments: {
+      brandLoyalistRatio: 25,
+      pragmatistRatio: 50,
+      floatingVoterRatio: 25,
+    },
+    biddingRules: {
+      consortiumAllowed: false,
+      bidDepositAmount: 200,
+      proposalPrepCost: 8,
+    },
+    adjacentComplexIds: [1, 5],
     sentimentProfile: {
       brandWeight: 25,
       costSensitivity: 25,
@@ -163,6 +236,19 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '중심 상권과 지하철역을 품은 가온 신시가지의 심장. 상징성과 홍보 효과가 막대해 모든 대형 건설사가 사활을 걸고 눈독을 들이는 메인 배틀그라운드입니다.',
     dataSource: '서울시 정비계획 결정안 고시 (목동 7단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'competition_driver', // 경쟁 유도형 (피 터지는 경쟁 유도)
+    voterSegments: {
+      brandLoyalistRatio: 40,
+      pragmatistRatio: 40,
+      floatingVoterRatio: 20,
+    },
+    biddingRules: {
+      consortiumAllowed: false, // 단독 랜드마크 고집
+      bidDepositAmount: 600,
+      proposalPrepCost: 30,
+      mandatoryDesignItem: '지하철 직통 연결통로 및 복합 상업 스트리트몰 시공',
+    },
+    adjacentComplexIds: [3, 4, 8, 10],
     sentimentProfile: {
       brandWeight: 35,
       costSensitivity: 15,
@@ -187,6 +273,18 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '가구 수는 적지만 주민 간 결속력이 높고 잡음이 없습니다. 공사비 대비 높은 마진율을 올릴 수 있어 실속파 건설사들의 타깃이 됩니다.',
     dataSource: '양천구 정비계획 공람자료 (목동 8단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'pragmatic_profit', // 실리 추구형
+    voterSegments: {
+      brandLoyalistRatio: 10,
+      pragmatistRatio: 75,
+      floatingVoterRatio: 15,
+    },
+    biddingRules: {
+      consortiumAllowed: false,
+      bidDepositAmount: 180,
+      proposalPrepCost: 6,
+    },
+    adjacentComplexIds: [4, 7, 11],
     sentimentProfile: {
       brandWeight: 10,
       costSensitivity: 40,
@@ -211,6 +309,18 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '대규모 단지이지만 비대위의 활동이 왕성하고 조합 집행부와의 갈등이 심합니다. 잘못 발을 들였다가는 수주전이 장기 표류할 위험이 있습니다.',
     dataSource: '서울시 도시계획위원회 자문안 (목동 9단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'internal_feud', // 내부 갈등형
+    voterSegments: {
+      brandLoyalistRatio: 30,
+      pragmatistRatio: 30,
+      floatingVoterRatio: 40,
+    },
+    biddingRules: {
+      consortiumAllowed: true, // 갈등 분산을 위해 컨소시엄 허용
+      bidDepositAmount: 450,
+      proposalPrepCost: 18,
+    },
+    adjacentComplexIds: [5, 10, 13],
     sentimentProfile: {
       brandWeight: 20,
       costSensitivity: 20,
@@ -235,6 +345,18 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '남부 축의 대표 대형 단지. 수주에 성공하면 단숨에 연간 목표액의 절반을 채울 수 있지만, 탈락 시 투입된 수백억원의 영업비용이 증발합니다.',
     dataSource: '서울시 정비사업 정보몽땅 추진현황 (목동 10단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'hard_bargainer', // 강경 협상형
+    voterSegments: {
+      brandLoyalistRatio: 35,
+      pragmatistRatio: 45,
+      floatingVoterRatio: 20,
+    },
+    biddingRules: {
+      consortiumAllowed: true,
+      bidDepositAmount: 500,
+      proposalPrepCost: 20,
+    },
+    adjacentComplexIds: [7, 9, 11, 14],
     sentimentProfile: {
       brandWeight: 30,
       costSensitivity: 25,
@@ -259,6 +381,18 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '타 단지들에 비해 초반 언론 노출이 적어 대형사들이 방심하기 쉬운 곳입니다. 한발 빠른 물밑 영업을 펼치면 무혈입성도 노려볼 수 있습니다.',
     dataSource: '서울시 도시계획위원회 정비구역 지정안 (목동 11단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'pragmatic_compromise',
+    voterSegments: {
+      brandLoyalistRatio: 15,
+      pragmatistRatio: 60,
+      floatingVoterRatio: 25,
+    },
+    biddingRules: {
+      consortiumAllowed: false,
+      bidDepositAmount: 280,
+      proposalPrepCost: 10,
+    },
+    adjacentComplexIds: [8, 10, 12],
     sentimentProfile: {
       brandWeight: 10,
       costSensitivity: 35,
@@ -283,6 +417,18 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '중장년층 고령 조합원 비율이 높아 이주비 대출 금리와 분담금 유예 조건에 매우 민감합니다. 매력적인 금융 패키지가 승패의 열쇠입니다.',
     dataSource: '서울시 정비계획 열람공고 (목동 12단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'hard_bargainer',
+    voterSegments: {
+      brandLoyalistRatio: 15,
+      pragmatistRatio: 70, // 금융 및 실리 절대 우위
+      floatingVoterRatio: 15,
+    },
+    biddingRules: {
+      consortiumAllowed: false,
+      bidDepositAmount: 320,
+      proposalPrepCost: 12,
+    },
+    adjacentComplexIds: [11, 13],
     sentimentProfile: {
       brandWeight: 15,
       costSensitivity: 25,
@@ -307,6 +453,18 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '조합 집행부의 원가 검증 의지가 매우 확고하여 평당 공사비를 둘러싼 출혈 입찰 경쟁이 예상됩니다. 마진 방어냐 지지율이냐의 갈림길입니다.',
     dataSource: '양천구 정비계획 주민설명회 자료 (목동 13단지 기준)',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'pragmatic_profit',
+    voterSegments: {
+      brandLoyalistRatio: 20,
+      pragmatistRatio: 65,
+      floatingVoterRatio: 15,
+    },
+    biddingRules: {
+      consortiumAllowed: false,
+      bidDepositAmount: 420,
+      proposalPrepCost: 15,
+    },
+    adjacentComplexIds: [9, 12, 14],
     sentimentProfile: {
       brandWeight: 20,
       costSensitivity: 40,
@@ -322,8 +480,8 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     name: '가온 14단지',
     originalUnits: 3100,
     plannedUnits: 5123,
-    expectedCost: 36500, // 3조 6500억원 (최대 규모)
-    baseExpectedProfitMargin: 3.5, // 박리다매 대형 프로젝트
+    expectedCost: 36500, // 3조 6500억원 (최대 규모 매머드)
+    baseExpectedProfitMargin: 3.5,
     riskLevel: 'HIGH',
     startTurn: 10,
     stage: 'interest',
@@ -331,6 +489,19 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '신시가지 전체를 상징하는 최대어 단지. 수주 시 업계 왕좌에 등극하지만, 공사비 조달 실패나 공기 지연 발생 시 회사 전체가 휘청일 수 있습니다.',
     dataSource: '서울시 도시계획위원회 목동 14단지 정비계획 고시',
     sourceDate: '2026년 공개 기준',
+    unionPersonality: 'competition_driver',
+    voterSegments: {
+      brandLoyalistRatio: 45,
+      pragmatistRatio: 40,
+      floatingVoterRatio: 15,
+    },
+    biddingRules: {
+      consortiumAllowed: true, // 5,000세대 초대형이므로 컨소시엄 허용
+      bidDepositAmount: 800,   // 최고액 보증금
+      proposalPrepCost: 40,    // 제안서 제작 실비 40억원
+      mandatoryDesignItem: '스카이라인 랜드마크 타워 및 대규모 중앙공원 기부채납 설계',
+    },
+    adjacentComplexIds: [10, 13, 15],
     sentimentProfile: {
       brandWeight: 40,
       costSensitivity: 20,
@@ -347,7 +518,7 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     originalUnits: 1700,
     plannedUnits: 3200,
     expectedCost: 17000, // 1조 7000억원
-    baseExpectedProfitMargin: 7.2, // 상대적으로 높은 예상 수익성
+    baseExpectedProfitMargin: 7.2,
     riskLevel: 'MID',
     startTurn: 3,
     stage: 'interest',
@@ -355,6 +526,18 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     description: '가온 신시가지 동측 확장지구에 위치한 전략 단지. 사업 속도가 빠르고 수익성이 좋지만 조합원들의 금융 민감도가 높아 중견-대형사의 역전 찬스 구역입니다.',
     dataSource: '가온 신시가지 밸런스 가상 시뮬레이션 모델 (15단지 전용)',
     sourceDate: '2026년 가상 기획 모델',
+    unionPersonality: 'fast_track',
+    voterSegments: {
+      brandLoyalistRatio: 20,
+      pragmatistRatio: 55,
+      floatingVoterRatio: 25,
+    },
+    biddingRules: {
+      consortiumAllowed: false,
+      bidDepositAmount: 250,
+      proposalPrepCost: 10,
+    },
+    adjacentComplexIds: [14],
     sentimentProfile: {
       brandWeight: 15,
       costSensitivity: 25,

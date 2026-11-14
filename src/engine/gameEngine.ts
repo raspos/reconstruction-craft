@@ -6,7 +6,10 @@ import {
   PlayerTarget,
   SalesAction,
   ComplexBiddingState,
-  GameEnding,
+  BidProposal,
+  ObservableCompetitorAction,
+  CommunityPost,
+  ExternalMarketProject,
 } from '../types/game';
 import { RAW_COMPLEX_DATA } from '../data/complexes';
 import { CONSTRUCTION_COMPANIES } from '../data/companies';
@@ -18,6 +21,11 @@ import { AICompetitorEngine } from './aiCompetitorEngine';
 import { EventEngine } from './eventEngine';
 import { RumorEngine } from './rumorEngine';
 import { EndingEngine } from './endingEngine';
+import { UnionAIEngine } from './unionAIEngine';
+import { ProposalEvaluationResult, evaluateProposal, DEFAULT_STANDARD_PROPOSAL } from './proposalEngine';
+import { simulateGeneralAssemblyVote } from './votingEngine';
+import { generateCommunityPosts } from './communityEngine';
+import { processExternalMarketTurn, INITIAL_EXTERNAL_PROJECTS } from './externalMarketEngine';
 
 export class GameEngine {
   private state: GameState;
@@ -25,6 +33,7 @@ export class GameEngine {
   private aiEngine: AICompetitorEngine;
   private eventEngine: EventEngine;
   private rumorEngine: RumorEngine;
+  private unionEngine: UnionAIEngine;
   public allComplexes: ComplexData[];
 
   constructor(
@@ -38,6 +47,7 @@ export class GameEngine {
     this.aiEngine = new AICompetitorEngine(this.rng);
     this.eventEngine = new EventEngine(this.rng);
     this.rumorEngine = new RumorEngine(this.rng);
+    this.unionEngine = new UnionAIEngine(this.rng);
     this.allComplexes = JSON.parse(JSON.stringify(RAW_COMPLEX_DATA));
 
     this.state = this.initializeGameState(playerCompanyId, gameMode, targetOption, scheduleMasterplanId);
@@ -59,7 +69,7 @@ export class GameEngine {
       SCHEDULE_MASTERPLANS.find((p) => p.id === scheduleMasterplanId) ||
       SCHEDULE_MASTERPLANS[0];
 
-    // 목표 설정이 없을 경우 회사의 기본 시공 캐파에 비례한 기본 목표 부여
+    // 목표 설정
     const defaultTarget: PlayerTarget = targetOption || {
       targetVolume: Math.round(playerCompany.attributes.capa * 0.8),
       targetLabel: `${(Math.round(playerCompany.attributes.capa * 0.8) / 10000).toFixed(1)}조원 (균형 목표)`,
@@ -68,10 +78,11 @@ export class GameEngine {
 
     // 15개 단지 수주전 초기 상태 구성
     const complexStates: Record<number, ComplexBiddingState> = {};
+    const staffAllocation: Record<number, number> = {};
+
     this.allComplexes.forEach((complex) => {
-      // 마스터플랜에 따른 시작 턴 적용
+      staffAllocation[complex.id] = 0;
       const baseStartTurn = masterplan.startTurns[complex.id] || complex.startTurn;
-      // 턴 스케일 조정 (12턴 모드인 경우 시작 턴 압축)
       const adjustedStartTurn =
         gameMode === 'FAST_12' ? Math.max(1, Math.ceil(baseStartTurn / 2)) : baseStartTurn;
       complex.startTurn = adjustedStartTurn;
@@ -79,7 +90,6 @@ export class GameEngine {
       const supportScores: ComplexBiddingState['supportScores'] = {};
 
       CONSTRUCTION_COMPANIES.forEach((comp) => {
-        // 단지 성향과 회사 속성에 기반한 초기 지지율 계산
         const initialFavor = calculateFavorability({
           company: comp,
           complex,
@@ -91,16 +101,35 @@ export class GameEngine {
           trustScore: 70,
         });
 
+        // 경쟁사 초기 숨겨진 입찰 의지 (30 ~ 80)
+        const hiddenIntent = Math.min(
+          95,
+          Math.max(20, Math.round(comp.attributes.brand * 0.4 + comp.attributes.salesOrg * 0.4 + this.rng.range(-15, 15)))
+        );
+
+        const initialActions: ObservableCompetitorAction[] = [];
+        if (complex.startTurn === 1 && comp.id !== playerCompanyId && hiddenIntent >= 40) {
+          initialActions.push({
+            type: 'BANNER_AD',
+            turn: 1,
+            description: `${comp.name} 브랜드 환영 현수막 및 안내문 부착`,
+            sincerityWeight: 0.3,
+          });
+        }
+
         supportScores[comp.id] = {
-          generalSupport: 50,
-          execSupport: 40,
+          hiddenBidIntent: hiddenIntent,
+          observableActions: initialActions,
+          estimatedBidChance: Math.min(95, Math.max(15, hiddenIntent + this.rng.range(-15, 15))),
+          intelReliability: 'LOW',
+          isWithdrawn: false,
+          hasBid: false,
+          totalFavorability: initialFavor.totalFavorability,
           brandPerception: comp.attributes.brand,
           costOfferedMarginDelta: 0,
           financeOffered: comp.attributes.finance,
+          execSupport: 40,
           trustScore: 70,
-          hasBid: false,
-          isWithdrawn: false,
-          totalFavorability: initialFavor.totalFavorability,
         };
       });
 
@@ -108,7 +137,11 @@ export class GameEngine {
         complexId: complex.id,
         currentStage: complex.startTurn === 1 ? complex.stage : 'interest',
         monthsInStage: 0,
+        prFatigue: 0,
+        unionActions: [],
         supportScores,
+        playerProposal: undefined,
+        consortiumPartnerId: null,
         winnerId: null,
         isSoleBid: false,
         isRebid: false,
@@ -116,6 +149,14 @@ export class GameEngine {
         contractPrice: complex.expectedCost,
         finalProfitMargin: complex.baseExpectedProfitMargin,
       };
+    });
+
+    // 시작 턴 활성 단지에 기본 인력 자동 분배 (100명 중 활성 단지 3~4곳에 분배)
+    const turn1Complexes = this.allComplexes.filter((c) => c.startTurn === 1);
+    const count = turn1Complexes.length || 1;
+    const perComplex = Math.floor(80 / count);
+    turn1Complexes.forEach((c) => {
+      staffAllocation[c.id] = perComplex;
     });
 
     // 경쟁사 AI 상태 초기화
@@ -136,6 +177,8 @@ export class GameEngine {
     });
 
     const initialRumors = this.rumorEngine.generateTurnRumors(1);
+    const initialCommunityPosts = generateCommunityPosts(1, this.allComplexes, complexStates, initialRumors);
+    const externalProjects = JSON.parse(JSON.stringify(INITIAL_EXTERNAL_PROJECTS));
 
     return {
       gameMode,
@@ -155,8 +198,12 @@ export class GameEngine {
       companyReputation: 85,
       legalRisk: 0,
       totalSalesCostSpent: 0,
+      totalSalesStaff: 100,
+      staffAllocation,
       complexStates,
       competitorStates,
+      communityPosts: initialCommunityPosts,
+      externalProjects,
       rumors: initialRumors,
       eventsHistory: [],
       lastTurnEvents: [],
@@ -173,6 +220,138 @@ export class GameEngine {
 
   public getState(): GameState {
     return this.state;
+  }
+
+  // 영업 인력(100명) 재배치
+  public allocateStaff(allocations: Record<number, number>): { success: boolean; message: string } {
+    let total = 0;
+    Object.values(allocations).forEach((v) => {
+      total += Math.max(0, Number(v) || 0);
+    });
+
+    if (total > this.state.totalSalesStaff) {
+      return {
+        success: false,
+        message: `가용 영업 인력(총 ${this.state.totalSalesStaff}명)을 초과했습니다. (요청: ${total}명)`,
+      };
+    }
+
+    this.state.staffAllocation = { ...allocations };
+    return {
+      success: true,
+      message: `영업 인력 재배치가 완료되었습니다. (투입: ${total}명 / 대기: ${this.state.totalSalesStaff - total}명)`,
+    };
+  }
+
+  // 입찰 제안서 제출 및 평가
+  public submitPlayerProposal(
+    complexId: number,
+    proposal: BidProposal,
+    consortiumPartnerId?: string | null
+  ): { success: boolean; message: string; evalResult: ProposalEvaluationResult } {
+    const complex = this.allComplexes.find((c) => c.id === complexId);
+    const bState = this.state.complexStates[complexId];
+    const playerCompany = CONSTRUCTION_COMPANIES.find((c) => c.id === this.state.playerCompanyId)!;
+
+    if (!complex || !bState) {
+      throw new Error('단지를 찾을 수 없습니다.');
+    }
+
+    // 컨소시엄 가능 여부 검증
+    if (consortiumPartnerId && !complex.biddingRules.consortiumAllowed) {
+      return {
+        success: false,
+        message: '해당 단지는 조합 규정상 건설사 컨소시엄(공동도급) 입찰이 엄격히 금지되어 있습니다.',
+        evalResult: evaluateProposal(proposal, complex, playerCompany),
+      };
+    }
+
+    const evalResult = evaluateProposal(proposal, complex, playerCompany);
+
+    bState.playerProposal = proposal;
+    bState.consortiumPartnerId = consortiumPartnerId || null;
+
+    // 제안서 실비 소멸 적용 (소멸비용 차감)
+    const prepCost = complex.biddingRules.proposalPrepCost;
+    if (this.state.budget >= prepCost) {
+      this.state.budget -= prepCost;
+      this.state.totalSalesCostSpent += prepCost;
+    }
+
+    // CFO 경고 로그
+    if (evalResult.cfoWarningMessage) {
+      this.state.cfoTrust = Math.max(10, this.state.cfoTrust - 8);
+      this.state.turnLogs.push({
+        turn: this.state.currentTurn,
+        message: `[CFO 경고] ${complex.name} 제안서 제출: ${evalResult.cfoWarningMessage}`,
+        type: 'WARNING',
+      });
+    }
+
+    const partnerComp = consortiumPartnerId
+      ? CONSTRUCTION_COMPANIES.find((c) => c.id === consortiumPartnerId)
+      : null;
+
+    const partnerMsg = partnerComp ? ` (${partnerComp.name}과 공동 컨소시엄)` : '';
+
+    this.state.turnLogs.push({
+      turn: this.state.currentTurn,
+      message: `[입찰 제안서 공식 접수] ${complex.name}에 맞춤형 제안서${partnerMsg}를 제출 완료했습니다. (예상 마진: ${evalResult.effectiveMarginPercent}%, 브랜드 매력도: ${evalResult.brandLoyalistAppeal}점, 실리파 매력도: ${evalResult.pragmatistAppeal}점)`,
+      type: 'SUCCESS',
+    });
+
+    return {
+      success: true,
+      message: `${complex.name} 입찰 제안서가 성공적으로 접수되었습니다.`,
+      evalResult,
+    };
+  }
+
+  // 경쟁사 정보 정밀 분석 (정보전)
+  public investigateCompetitor(
+    complexId: number,
+    competitorId: string
+  ): { success: boolean; message: string; revealedIntent: number; reliability: string } {
+    if (this.state.availableAP < 1) {
+      return { success: false, message: '행동력(AP)이 부족합니다.', revealedIntent: 0, reliability: 'LOW' };
+    }
+    if (this.state.budget < 5) {
+      return { success: false, message: '정보 수집 영업비(5억원)가 부족합니다.', revealedIntent: 0, reliability: 'LOW' };
+    }
+
+    this.state.availableAP -= 1;
+    this.state.budget -= 5;
+    this.state.totalSalesCostSpent += 5;
+
+    const bState = this.state.complexStates[complexId];
+    const stance = bState?.supportScores[competitorId];
+    const comp = CONSTRUCTION_COMPANIES.find((c) => c.id === competitorId);
+    const complex = this.allComplexes.find((c) => c.id === complexId);
+
+    if (!stance || !comp || !complex) {
+      return { success: false, message: '정보 대상을 찾을 수 없습니다.', revealedIntent: 0, reliability: 'LOW' };
+    }
+
+    // 신뢰도 HIGH 격상 및 진정성 공개
+    stance.intelReliability = 'HIGH';
+    stance.estimatedBidChance = stance.hiddenBidIntent;
+
+    let verdict = '포기 가능성 농후 (단순 블러핑)';
+    if (stance.hiddenBidIntent >= 70) verdict = '결사항전 실입찰 확정';
+    else if (stance.hiddenBidIntent >= 45) verdict = '간보기 및 조건 관망 중';
+
+    this.state.turnLogs.push({
+      turn: this.state.currentTurn,
+      message: `[정보전 첩보 입수] ${complex.name} 내 ${comp.name}의 실제 입찰 의지는 ${stance.hiddenBidIntent}% 수준으로 파악되었습니다. (${verdict})`,
+      type: 'INFO',
+    });
+
+    return {
+      success: true,
+      message: `정밀 첩보 확인 완료: ${comp.name} 실제 의지 ${stance.hiddenBidIntent}% (${verdict})`,
+      revealedIntent: stance.hiddenBidIntent,
+      reliability: 'HIGH',
+    };
   }
 
   // 플레이어 영업 행동 실행
@@ -206,7 +385,15 @@ export class GameEngine {
     this.state.budget -= action.budgetCost;
     this.state.totalSalesCostSpent += action.budgetCost;
 
+    // 홍보 피로도 누적
+    const fatigueDelta = action.effect.prFatigueIncrease || (action.category === 'RISKY' ? 18 : 8);
+    bState.prFatigue = Math.min(100, bState.prFatigue + fatigueDelta);
+
     const mySupport = bState.supportScores[this.state.playerCompanyId];
+
+    // 투입된 영업인력 시너지 보너스
+    const staff = this.state.staffAllocation[complexId] || 0;
+    const staffBonus = Math.floor(staff / 20); // 20명당 +1 보너스
 
     // 행동 효과 적용
     if (action.id === 'withdraw_bid') {
@@ -228,10 +415,8 @@ export class GameEngine {
 
     // 호감도 및 마진 변동 적용
     if (action.effect.favorabilityBoost) {
-      mySupport.totalFavorability = Math.min(
-        99,
-        mySupport.totalFavorability + action.effect.favorabilityBoost
-      );
+      const totalBoost = action.effect.favorabilityBoost + staffBonus;
+      mySupport.totalFavorability = Math.min(99, mySupport.totalFavorability + totalBoost);
     }
     if (action.effect.brandImpression) {
       mySupport.brandPerception = Math.min(100, mySupport.brandPerception + action.effect.brandImpression);
@@ -239,11 +424,9 @@ export class GameEngine {
     if (action.effect.marginDelta) {
       mySupport.costOfferedMarginDelta += action.effect.marginDelta;
       if (action.effect.marginDelta < 0) {
-        // 공사비 덤핑 관측 -> AI 메모리에 기록
         Object.values(this.state.competitorStates).forEach((comp) => {
           comp.strategyMemory.playerPriceCutObserved += 1;
         });
-        // CFO의 경계
         this.state.cfoTrust = Math.max(10, this.state.cfoTrust - 8);
       }
     }
@@ -251,9 +434,12 @@ export class GameEngine {
       mySupport.execSupport = Math.min(100, mySupport.execSupport + action.effect.executiveTrust);
     }
     if (action.effect.intelGain) {
-      // 해당 단지 소문 즉시 검증
       this.state.rumors.forEach((r) => {
         if (r.relatedComplexId === complexId) r.investigated = true;
+      });
+      // 단지 내 모든 경쟁사 정보 신뢰도 상승
+      Object.values(bState.supportScores).forEach((s) => {
+        s.intelReliability = 'MID';
       });
     }
 
@@ -267,6 +453,7 @@ export class GameEngine {
         this.state.cfoTrust = Math.max(10, this.state.cfoTrust - 15);
         this.state.legalRisk += 25;
         mySupport.totalFavorability = Math.max(15, mySupport.totalFavorability - 25);
+        bState.prFatigue = Math.min(100, bState.prFatigue + 25);
         this.state.turnLogs.push({
           turn: this.state.currentTurn,
           message: `[불법 영업 적발 경고] ${complex.name}에서 ${action.name} 중 비대위 및 사법당국에 꼬리가 잡혔습니다! 평판과 지지율이 폭락합니다.`,
@@ -283,18 +470,41 @@ export class GameEngine {
 
     const statusMsg = scandalTriggered
       ? `적발 발생! ${action.name} 실행으로 리스크가 급증했습니다.`
-      : `${action.name} 실행 완료: ${complex.name} 지지율 상승`;
+      : `${action.name} 실행 완료: ${complex.name} 지지율 상승 (+인력시너지 ${staffBonus})`;
 
     return { success: true, message: statusMsg, scandalTriggered };
   }
 
-  // 턴 종료 및 다음 달 진행 (AI 연산, 총회 표결, 단지 단계 진행, 사건/소문 갱신)
+  // 턴 종료 및 다음 달 진행
   public nextTurn(): { newEvents: any[]; contractsSigned: any[] } {
     if (this.state.isGameOver) return { newEvents: [], contractsSigned: [] };
 
     const contractsSigned: Array<{ complexName: string; winnerName: string; price: number }> = [];
 
-    // 1. 경쟁사 AI 의사결정 및 행동 실행
+    // 1. 외부 시장 프로젝트 해결 체크 (강남 압구정, 한남 4구역 등)
+    const extResolution = processExternalMarketTurn(
+      this.state.currentTurn,
+      this.state.externalProjects,
+      CONSTRUCTION_COMPANIES,
+      this.state.playerCompanyId
+    );
+
+    if (extResolution) {
+      this.state.turnLogs.push({
+        turn: this.state.currentTurn,
+        message: extResolution.impactMessage,
+        type: 'INFO',
+      });
+      // 수주한 경쟁사의 가온 신시가지 내 입찰 의지 25% 하락
+      Object.values(this.state.complexStates).forEach((st) => {
+        const rivalStance = st.supportScores[extResolution.winnerCompanyId];
+        if (rivalStance) {
+          rivalStance.hiddenBidIntent = Math.max(10, rivalStance.hiddenBidIntent - 25);
+        }
+      });
+    }
+
+    // 2. 경쟁사 AI 의사결정 및 관찰 가능 행동 생성
     CONSTRUCTION_COMPANIES.filter((c) => c.id !== this.state.playerCompanyId).forEach((company) => {
       const aiDecisions = this.aiEngine.evaluateCompanyTurn(
         company,
@@ -321,21 +531,57 @@ export class GameEngine {
           if (dec.marginAdjustment) {
             myScore.costOfferedMarginDelta += dec.marginAdjustment;
           }
+
+          // 관찰 가능 행동 추가 (쇼룸, 홍보관, CEO 방문 등)
+          if (myScore.hiddenBidIntent >= 70 && this.rng.chance(0.35)) {
+            myScore.observableActions.push({
+              type: 'CEO_VISIT',
+              turn: this.state.currentTurn,
+              description: `${company.name} 대표이사 현장 전격 방문 및 조합원 간담회 주재`,
+              sincerityWeight: 0.85,
+            });
+          } else if (this.rng.chance(0.4)) {
+            myScore.observableActions.push({
+              type: 'SHOWROOM_OPEN',
+              turn: this.state.currentTurn,
+              description: `${company.name} 단지 인근 프리미엄 홍보관 개관 및 VIP 상담`,
+              sincerityWeight: 0.6,
+            });
+          }
         }
       });
     });
 
-    // 2. 단지별 수주 단계 진행 및 시공사 선정 총회 처리
+    // 3. 조합 AI 평가 및 단지별 단계 진행 / 총회 투표
     this.allComplexes.forEach((complex) => {
       const bState = this.state.complexStates[complex.id];
       if (!bState || bState.currentStage === 'contracted' || bState.winnerId) return;
 
-      // 해당 단지가 아직 시작 턴에 도달하지 않은 경우
       if (complex.startTurn > this.state.currentTurn) return;
+
+      // 조합 AI 의사결정 호출
+      const unionAction = this.unionEngine.evaluateTurn(complex, bState, this.state);
+      if (unionAction) {
+        bState.unionActions.push(unionAction);
+        this.state.turnLogs.push({
+          turn: this.state.currentTurn,
+          message: unionAction.title,
+          type: unionAction.type === 'PUBLIC_WARNING' ? 'WARNING' : 'INFO',
+        });
+      }
+
+      // 자연 홍보 피로도 감쇠 (매 턴 -6)
+      bState.prFatigue = Math.max(0, bState.prFatigue - 6);
+
+      // 인력 상주 패시브 보너스
+      const staff = this.state.staffAllocation[complex.id] || 0;
+      if (staff > 0) {
+        const mySupport = bState.supportScores[this.state.playerCompanyId];
+        mySupport.totalFavorability = Math.min(99, mySupport.totalFavorability + Math.min(3, Math.floor(staff / 30)));
+      }
 
       bState.monthsInStage += 1;
 
-      // 단계별 진행 임계 시간 (월 단위)
       const stageDurationMap: Record<ComplexStage, number> = {
         interest: 2,
         pre_sales: 3,
@@ -345,7 +591,6 @@ export class GameEngine {
         contracted: 999,
       };
 
-      // 다음 단계로 진입
       if (bState.monthsInStage >= stageDurationMap[bState.currentStage]) {
         bState.monthsInStage = 0;
 
@@ -359,37 +604,48 @@ export class GameEngine {
           bState.currentStage = 'selection';
         } else if (bState.currentStage === 'selection') {
           // ==============================
-          // 시공사 선정 총회 표결
+          // 고도화 비밀투표 총회 표결
           // ==============================
           this.resolveSelectionAssembly(complex, bState, contractsSigned);
         }
       }
     });
 
-    // 3. 시장 사건(돌발 위기) 발생 판정
+    // 4. 시장 사건 발생 판정
     const newEvents = this.eventEngine.evaluateTurnEvents(this.state);
     this.state.lastTurnEvents = newEvents;
     this.state.eventsHistory.push(...newEvents);
 
-    // 4. 신규 업계 소문 생성
+    // 5. 신규 업계 소문 생성
     this.state.rumors = this.rumorEngine.generateTurnRumors(this.state.currentTurn + 1);
 
-    // 5. 플레이어 자원 회복 및 평가 지표 갱신
+    // 6. 가상 커뮤니티 (가온 신시가지 소통방) 피드 갱신
+    const newPosts = generateCommunityPosts(
+      this.state.currentTurn,
+      this.allComplexes,
+      this.state.complexStates,
+      this.state.rumors
+    );
+    this.state.communityPosts.unshift(...newPosts);
+    // 최대 40개 유지
+    if (this.state.communityPosts.length > 40) {
+      this.state.communityPosts = this.state.communityPosts.slice(0, 40);
+    }
+
+    // 7. 사후 계약 이행 위험 관리 (이미 수주한 단지들 점검)
+    this.processContractFulfillmentRisks();
+
+    // 8. 플레이어 자원 회복
     const playerCompany =
       CONSTRUCTION_COMPANIES.find((c) => c.id === this.state.playerCompanyId) ||
       CONSTRUCTION_COMPANIES[0];
     this.state.availableAP = playerCompany.startingAP;
     this.state.actionsTakenThisTurn = [];
 
-    // CFO/CEO 만족도 동적 계산
-    if (this.state.usedCapa > this.state.maxCapa) {
-      this.state.cfoTrust = Math.max(10, this.state.cfoTrust - 12);
-    }
-
     // 턴 전진
     this.state.currentTurn += 1;
 
-    // 게임 종료 판정 (24턴 또는 12턴 도달 시)
+    // 게임 종료 판정
     if (this.state.currentTurn > this.state.totalTurns) {
       this.state.isGameOver = true;
       const evaluation = EndingEngine.evaluateGame(this.state, this.allComplexes);
@@ -399,74 +655,76 @@ export class GameEngine {
     return { newEvents, contractsSigned };
   }
 
-  // 시공사 선정 총회 투표 및 계약 체결 처리
+  // 시공사 선정 총회 투표 및 계약 체결 처리 (votingEngine 연동)
   private resolveSelectionAssembly(
     complex: ComplexData,
     bState: ComplexBiddingState,
     contractsSigned: Array<{ complexName: string; winnerName: string; price: number }>
   ): void {
-    // 유효 입찰자 목록 (철수하지 않고 최소 20점 이상의 호감도를 보유한 회사)
-    const activeCandidates = Object.entries(bState.supportScores)
-      .filter(([, s]) => !s.isWithdrawn && s.totalFavorability > 10)
-      .map(([compId, s]) => ({ compId, favorability: s.totalFavorability }));
+    const playerParticipates =
+      !bState.supportScores[this.state.playerCompanyId]?.isWithdrawn &&
+      (bState.playerProposal !== undefined ||
+        bState.supportScores[this.state.playerCompanyId]?.hasBid ||
+        bState.supportScores[this.state.playerCompanyId]?.totalFavorability >= 25);
 
-    if (activeCandidates.length === 0) {
-      // 아무도 입찰하지 않아 유찰 -> 다음 턴에 재입찰 진행
-      bState.isRebid = true;
+    const voteResult = simulateGeneralAssemblyVote(
+      complex,
+      bState,
+      CONSTRUCTION_COMPANIES,
+      this.state.playerCompanyId,
+      playerParticipates,
+      bState.playerProposal,
+      bState.consortiumPartnerId
+    );
+
+    bState.winnerId = voteResult.winnerId;
+    bState.winnerIsConsortium = voteResult.winnerIsConsortium;
+    bState.isSoleBid = voteResult.isSoleBid;
+    bState.isRebid = voteResult.isRebid;
+    bState.negotiatedContract = voteResult.negotiatedContract;
+    bState.contractPrice = voteResult.contractPrice;
+    bState.finalProfitMargin = voteResult.finalProfitMargin;
+
+    if (voteResult.isRebid) {
+      // 유찰 -> 다시 입찰 진행 단계로 복귀
       bState.currentStage = 'bidding';
       bState.monthsInStage = 0;
       this.state.turnLogs.push({
         turn: this.state.currentTurn,
-        message: `[유찰] ${complex.name} 시공사 입찰이 무응찰로 유찰되어 재입찰 공고가 진행됩니다.`,
+        message: `[입찰 유찰] ${voteResult.assemblySummary} (사유: ${voteResult.keyVoteFactor})`,
         type: 'WARNING',
       });
       return;
     }
 
-    // 단독 입찰(Sole Bid) 처리 규칙:
-    // 첫 단독 입찰 시 65% 확률로 유찰 후 재입찰 진행, 35% 확률로 수의계약 전환
-    // 이미 재입찰(isRebid) 상태에서 단독 입찰인 경우 100% 수의계약 체결
-    if (activeCandidates.length === 1) {
-      const soleCandidate = activeCandidates[0];
-      if (!bState.isRebid && this.rng.chance(0.65)) {
-        bState.isRebid = true;
-        bState.isSoleBid = true;
-        bState.currentStage = 'bidding';
-        bState.monthsInStage = 0;
-        this.state.turnLogs.push({
-          turn: this.state.currentTurn,
-          message: `[단독 입찰 유찰] ${complex.name}에 한 개 사만 응찰하여 규정에 따라 재입찰에 부칩니다.`,
-          type: 'INFO',
-        });
-        return;
-      }
-      // 수의계약 체결
-      bState.negotiatedContract = true;
-      bState.winnerId = soleCandidate.compId;
-      bState.currentStage = 'contracted';
-    } else {
-      // 2개 사 이상 경쟁 투표 (호감도 비율 + 약간의 총회 현장 투표 변동성)
-      activeCandidates.sort(
-        (a, b) => b.favorability + this.rng.range(-5, 5) - (a.favorability + this.rng.range(-5, 5))
-      );
-      bState.winnerId = activeCandidates[0].compId;
-      bState.currentStage = 'contracted';
-    }
+    // 계약 완료 처리
+    bState.currentStage = 'contracted';
+    const winnerName = voteResult.winnerName || '미상';
 
-    const winnerCompany = CONSTRUCTION_COMPANIES.find((c) => c.id === bState.winnerId);
-    const winnerName = winnerCompany ? winnerCompany.name : '미상';
+    // 사후 계약 관리 객체 초기화
+    bState.contractFulfillment = {
+      originalAgreedMargin: voteResult.finalProfitMargin,
+      currentExpectedMargin: voteResult.finalProfitMargin,
+      delayMonths: 0,
+      unresolvedDisputes: 0,
+    };
 
-    // 캐파 반영 및 실적 기록
-    if (bState.winnerId === this.state.playerCompanyId) {
+    if (voteResult.winnerId === this.state.playerCompanyId) {
       this.state.usedCapa += complex.expectedCost;
       this.state.ceoTrust = Math.min(100, this.state.ceoTrust + 15);
+      if (voteResult.finalProfitMargin < 2.0) {
+        this.state.cfoTrust = Math.max(10, this.state.cfoTrust - 10);
+      } else {
+        this.state.cfoTrust = Math.min(100, this.state.cfoTrust + 8);
+      }
+
       this.state.turnLogs.push({
         turn: this.state.currentTurn,
-        message: `[수주 쾌거!!] 가온 신시가지 ${complex.name}(공사비 ${(complex.expectedCost / 10000).toFixed(1)}조원) 시공권을 전격 확보했습니다!`,
+        message: `[수주 승리!] ${voteResult.assemblySummary}`,
         type: 'SUCCESS',
       });
-    } else if (bState.winnerId) {
-      const comp = this.state.competitorStates[bState.winnerId];
+    } else if (voteResult.winnerId) {
+      const comp = this.state.competitorStates[voteResult.winnerId];
       if (comp) {
         comp.usedCapa += complex.expectedCost;
         comp.wonComplexIds.push(complex.id);
@@ -474,7 +732,7 @@ export class GameEngine {
       }
       this.state.turnLogs.push({
         turn: this.state.currentTurn,
-        message: `[수주 결과] ${complex.name}의 시공권은 ${winnerName}에게 돌아갔습니다.`,
+        message: `[수주 결과] ${complex.name}의 시공권은 ${winnerName}에게 돌아갔습니다. (${voteResult.keyVoteFactor})`,
         type: 'INFO',
       });
     }
@@ -482,7 +740,27 @@ export class GameEngine {
     contractsSigned.push({
       complexName: complex.name,
       winnerName,
-      price: complex.expectedCost,
+      price: voteResult.contractPrice,
+    });
+  }
+
+  // 사후 계약 이행 위기 시뮬레이션
+  private processContractFulfillmentRisks(): void {
+    Object.values(this.state.complexStates).forEach((st) => {
+      if (st.currentStage === 'contracted' && st.winnerId === this.state.playerCompanyId && st.contractFulfillment) {
+        const proposal = st.playerProposal || DEFAULT_STANDARD_PROPOSAL;
+
+        // 시공사가 전액 물가 변동을 부담하기로 한 경우 (FULL_BUILDER_RISK)
+        if (proposal.escalationRisk === 'FULL_BUILDER_RISK' && this.rng.chance(0.12)) {
+          st.contractFulfillment.currentExpectedMargin -= 0.6;
+          st.contractFulfillment.unresolvedDisputes += 1;
+          this.state.turnLogs.push({
+            turn: this.state.currentTurn,
+            message: `[계약 이행 위기] ${this.allComplexes.find((c) => c.id === st.complexId)?.name}에서 자재비 인상 전액 부담 약정으로 인해 마진이 추가 악화되었습니다.`,
+            type: 'DANGER',
+          });
+        }
+      }
     });
   }
 }

@@ -12,6 +12,12 @@ import {
   Info,
   CheckCircle2,
   Skull,
+  FileCheck2,
+  Sparkles,
+  Users,
+  Flame,
+  Search,
+  Radio,
 } from 'lucide-react';
 import { ComplexData, GameState, SalesAction } from '../types/game';
 import { SALES_ACTIONS } from '../data/actions';
@@ -24,6 +30,8 @@ interface Props {
   gameState: GameState;
   onClose: () => void;
   onExecuteAction: (complexId: number, actionId: string) => void;
+  onOpenProposalBuilder?: (complex: ComplexData) => void;
+  onInvestigateCompetitor?: (complexId: number, competitorId: string) => void;
 }
 
 export const ComplexDetailModal: React.FC<Props> = ({
@@ -31,8 +39,10 @@ export const ComplexDetailModal: React.FC<Props> = ({
   gameState,
   onClose,
   onExecuteAction,
+  onOpenProposalBuilder,
+  onInvestigateCompetitor,
 }) => {
-  const [activeTab, setActiveTab] = useState<'ACTIONS' | 'SENTIMENT' | 'COMPETITORS'>('ACTIONS');
+  const [activeTab, setActiveTab] = useState<'ACTIONS' | 'UNION_AI' | 'SENTIMENT' | 'COMPETITORS'>('ACTIONS');
   const [actionCategory, setActionCategory] = useState<'ALL' | 'LEGAL' | 'RISKY'>('ALL');
   const [confirmRiskyAction, setConfirmRiskyAction] = useState<SalesAction | null>(null);
 
@@ -75,6 +85,19 @@ export const ComplexDetailModal: React.FC<Props> = ({
     }
   };
 
+  // 조합 AI 최근 전략 성명
+  const recentUnionAction =
+    bState.unionActions && bState.unionActions.length > 0
+      ? bState.unionActions[bState.unionActions.length - 1]
+      : null;
+
+  const isBiddingActiveStage =
+    bState.currentStage === 'bidding_prep' ||
+    bState.currentStage === 'bidding' ||
+    bState.currentStage === 'selection';
+
+  const prFatiguePercent = Math.min(100, bState.prFatigue || 0);
+
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
       <div className="bg-slate-900 border-2 border-slate-700 rounded-xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95">
@@ -94,7 +117,7 @@ export const ComplexDetailModal: React.FC<Props> = ({
                 </span>
                 {bState.winnerId && (
                   <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-900 text-blue-200 border border-blue-500 font-bold">
-                    수주 확정: {bState.winnerId === gameState.playerCompanyId ? '당사' : '경쟁사'}
+                    수주 확정: {bState.winnerId === gameState.playerCompanyId ? '당사 당선' : '경쟁사 선정'}
                   </span>
                 )}
               </div>
@@ -156,6 +179,57 @@ export const ComplexDetailModal: React.FC<Props> = ({
             </div>
           </div>
 
+          {/* 제안서 작성 CTA 배너 (입찰 준비/진행 단계) */}
+          {isBiddingActiveStage && !bState.winnerId && onOpenProposalBuilder && (
+            <div className="p-3.5 rounded-xl bg-gradient-to-r from-indigo-950/60 to-blue-950/60 border border-indigo-700/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-indigo-950/30">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-400">
+                  <FileCheck2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-white">
+                      {bState.playerProposal ? '맞춤형 입찰 제안서 제출 완료' : '입찰 제안서(사업제안서) 미작성'}
+                    </span>
+                    {bState.playerProposal && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-900/80 text-emerald-300 font-mono border border-emerald-700">
+                        접수 완료
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    {bState.playerProposal
+                      ? `브랜드 티어: ${bState.playerProposal.brandTier} | 공사비 할인: ${bState.playerProposal.costDiscount}`
+                      : '11대 옵션을 조립하여 총회 비밀투표에서 부동층과 실리파를 공략하십시오.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => onOpenProposalBuilder(complex)}
+                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition-all flex items-center gap-1.5 shrink-0"
+              >
+                <FileCheck2 className="w-4 h-4" />
+                <span>{bState.playerProposal ? '제안서 수정 / 재검토' : '제안서 조립하기'}</span>
+              </button>
+            </div>
+          )}
+
+          {/* 조합 AI 최근 성명 배너 */}
+          {recentUnionAction && (
+            <div className="p-3 rounded-lg bg-amber-950/30 border border-amber-600/50 space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400 font-pixel">
+                <Radio className="w-4 h-4 text-amber-400 animate-pulse" />
+                <span>{recentUnionAction.title}</span>
+              </div>
+              <p className="text-xs text-amber-200/90 leading-relaxed pl-5">
+                {recentUnionAction.message}
+              </p>
+              <div className="text-[10px] text-amber-400/80 pl-5 font-mono">
+                ※ 효과: {recentUnionAction.effectDescription}
+              </div>
+            </div>
+          )}
+
           {/* Voting Support Comparison Bar */}
           <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
             <div className="flex items-center justify-between text-xs font-pixel">
@@ -177,6 +251,44 @@ export const ComplexDetailModal: React.FC<Props> = ({
                 className="h-full bg-rose-500 ml-auto transition-all duration-300"
                 style={{ width: `${topRival ? topRival.totalFavorability : 0}%` }}
               />
+            </div>
+
+            {/* 홍보 피로도 게이지 */}
+            <div className="pt-2 border-t border-slate-900">
+              <div className="flex items-center justify-between text-[11px] mb-1">
+                <span className="text-slate-400 flex items-center gap-1">
+                  <Flame className="w-3.5 h-3.5 text-orange-400" />
+                  단지 내 홍보 피로도 (PR Fatigue)
+                </span>
+                <span
+                  className={`font-mono font-bold ${
+                    prFatiguePercent >= 50
+                      ? 'text-red-400'
+                      : prFatiguePercent >= 30
+                      ? 'text-amber-400'
+                      : 'text-slate-400'
+                  }`}
+                >
+                  {prFatiguePercent}/100
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-300 ${
+                    prFatiguePercent >= 50
+                      ? 'bg-red-500'
+                      : prFatiguePercent >= 30
+                      ? 'bg-amber-500'
+                      : 'bg-emerald-500'
+                  }`}
+                  style={{ width: `${prFatiguePercent}%` }}
+                />
+              </div>
+              {prFatiguePercent >= 50 && (
+                <p className="text-[10px] text-red-400 mt-1">
+                  경고: 과도한 영업으로 홍보 피로도가 한계에 달했습니다! 추가 영업 시 주민 반발로 부동층 표심이 급격히 이탈합니다.
+                </p>
+              )}
             </div>
 
             {/* Competitor Chips in this complex */}
@@ -256,6 +368,16 @@ export const ComplexDetailModal: React.FC<Props> = ({
               영업 활동 지시 (Action)
             </button>
             <button
+              onClick={() => setActiveTab('UNION_AI')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-pixel transition-colors ${
+                activeTab === 'UNION_AI'
+                  ? 'bg-amber-500 text-slate-950 font-bold'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              조합 AI & 유권자 ({complex.voterSegments.brandLoyalistRatio}% / {complex.voterSegments.pragmatistRatio}%)
+            </button>
+            <button
               onClick={() => setActiveTab('SENTIMENT')}
               className={`px-3 py-1.5 rounded-lg text-xs font-pixel transition-colors ${
                 activeTab === 'SENTIMENT'
@@ -273,7 +395,7 @@ export const ComplexDetailModal: React.FC<Props> = ({
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
               }`}
             >
-              경쟁사 입찰 현황 ({rivalScores.length}개 사)
+              경쟁사 동향 & 첩보 ({rivalScores.length}개 사)
             </button>
           </div>
 
@@ -386,7 +508,61 @@ export const ComplexDetailModal: React.FC<Props> = ({
             </div>
           )}
 
-          {/* TAB 2: SENTIMENT RADAR */}
+          {/* TAB 2: UNION AI & VOTER SEGMENTS */}
+          {activeTab === 'UNION_AI' && (
+            <div className="space-y-3">
+              {/* 조합 AI 성향 */}
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-pixel text-xs font-bold text-amber-400">조합 AI 의사결정 성향</span>
+                  <span className="text-[11px] px-2 py-0.5 rounded bg-indigo-900/60 text-indigo-300 border border-indigo-700/60 font-semibold font-mono">
+                    {complex.unionPersonality}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  이 조합은 <strong>{complex.unionPersonality}</strong> 성향으로, 단순히 인지도 높은 대형사에 끌려가지 않고 전략적 밀당을 벌입니다. 특정 건설사가 압도적 우세를 보이면 경쟁사의 추가 입찰을 독려하거나 공사비 추가 인하를 요구할 수 있습니다.
+                </p>
+              </div>
+
+              {/* 3대 유권자 계층 비율 */}
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                <h4 className="font-pixel text-xs font-bold text-slate-200">
+                  총회 비밀투표 3대 유권자 계층 비율
+                </h4>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-800/40">
+                    <span className="text-amber-400 font-semibold flex items-center justify-center gap-1">
+                      <Sparkles className="w-3 h-3" /> 브랜드 충성파
+                    </span>
+                    <div className="text-base font-black text-amber-300 mt-1 font-mono">
+                      {complex.voterSegments.brandLoyalistRatio}%
+                    </div>
+                    <span className="text-[10px] text-slate-400">하이엔드·외관 중시</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-800/40">
+                    <span className="text-cyan-400 font-semibold flex items-center justify-center gap-1">
+                      <Flame className="w-3 h-3" /> 실리파
+                    </span>
+                    <div className="text-base font-black text-cyan-300 mt-1 font-mono">
+                      {complex.voterSegments.pragmatistRatio}%
+                    </div>
+                    <span className="text-[10px] text-slate-400">공사비·금융조건 우선</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-indigo-950/30 border border-indigo-800/40">
+                    <span className="text-indigo-400 font-semibold flex items-center justify-center gap-1">
+                      <Users className="w-3 h-3" /> 부동층
+                    </span>
+                    <div className="text-base font-black text-indigo-300 mt-1 font-mono">
+                      {complex.voterSegments.floatingVoterRatio}%
+                    </div>
+                    <span className="text-[10px] text-slate-400">총회장 당일 여론 좌우</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: SENTIMENT RADAR */}
           {activeTab === 'SENTIMENT' && (
             <div className="space-y-3">
               <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
@@ -472,35 +648,83 @@ export const ComplexDetailModal: React.FC<Props> = ({
             </div>
           )}
 
-          {/* TAB 3: COMPETITORS */}
+          {/* TAB 4: COMPETITORS & INTEL */}
           {activeTab === 'COMPETITORS' && (
             <div className="space-y-2">
               <div className="p-2.5 rounded bg-slate-950 border border-slate-800 text-xs text-slate-400 mb-2">
-                경쟁사들의 현재 예상 지지율 및 활동 동향입니다. 정보 수집 행동을 통해 더 정밀한 정보를 파악할 수 있습니다.
+                경쟁사들의 관찰 가능한 겉보기 행동과 실제 숨겨진 입찰 의지 상태입니다. 첩보 조사를 통해 진정성을 밝혀내십시오.
               </div>
-              <div className="space-y-1.5">
-                {rivalScores.map((rival) => (
-                  <div
-                    key={rival.id}
-                    className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between text-xs"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-pixel text-slate-200 font-bold">
-                        {rival.id.toUpperCase()} 건설
-                      </span>
-                      {rival.isWithdrawn && (
-                        <span className="px-1.5 py-0.2 rounded bg-rose-950 text-rose-400 text-[10px] border border-rose-800">
-                          철수 선언
-                        </span>
+              <div className="space-y-2">
+                {rivalScores.map((rival) => {
+                  const comp = CONSTRUCTION_COMPANIES.find((c) => c.id === rival.id);
+                  const isHighReliability = rival.intelReliability === 'HIGH';
+
+                  return (
+                    <div
+                      key={rival.id}
+                      className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-col gap-2 text-xs"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: comp?.color || '#94a3b8' }}
+                          />
+                          <span className="font-pixel text-slate-200 font-bold text-sm">
+                            {comp?.name || rival.id}
+                          </span>
+                          {rival.isWithdrawn ? (
+                            <span className="px-1.5 py-0.2 rounded bg-rose-950 text-rose-400 text-[10px] border border-rose-800">
+                              철수 선언
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 text-[10px]">
+                              신뢰도: {rival.intelReliability}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-400">
+                            예상 지지율: <strong className="text-amber-400">{rival.totalFavorability}%</strong>
+                          </span>
+                          {onInvestigateCompetitor && !isHighReliability && !rival.isWithdrawn && (
+                            <button
+                              onClick={() => onInvestigateCompetitor(complex.id, rival.id)}
+                              className="px-2.5 py-1 rounded bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/50 text-[11px] font-semibold flex items-center gap-1 transition-colors"
+                            >
+                              <Search className="w-3 h-3" />
+                              <span>첩보 조사 (1AP / 5억)</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 관찰 가능 활동 목록 */}
+                      {rival.observableActions && rival.observableActions.length > 0 && (
+                        <div className="pt-1.5 border-t border-slate-900 space-y-1">
+                          <span className="text-[10px] text-slate-500">최근 포착된 현장 활동:</span>
+                          {rival.observableActions.slice(-2).map((act, i) => (
+                            <div key={i} className="text-[11px] text-slate-300 flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                              <span>{act.description}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* 첩보 조사 완료 시 실제 의지 노출 */}
+                      {isHighReliability && (
+                        <div className="pt-1.5 border-t border-slate-900 text-emerald-400 text-[11px] flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>
+                            실제 숨겨진 입찰 의지: <strong>{rival.hiddenBidIntent}%</strong> (정밀 첩보 확인)
+                          </span>
+                        </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 font-mono">
-                      <span className="text-slate-400">
-                        예상 지지율: <strong className="text-amber-400">{rival.totalFavorability}%</strong>
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

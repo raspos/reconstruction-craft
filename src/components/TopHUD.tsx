@@ -9,6 +9,9 @@ import {
   AlertTriangle,
   ChevronRight,
   Users,
+  MessageSquare,
+  Target,
+  Users2,
 } from 'lucide-react';
 import { GameState, CompanyData } from '../types/game';
 import { formatKRW, formatPercent } from '../utils/formatters';
@@ -22,6 +25,8 @@ interface Props {
   onNextTurn: () => void;
   onOpenSchedule: () => void;
   onOpenCompetitors: () => void;
+  onOpenCommunity: () => void;
+  onOpenWarRoom: () => void;
 }
 
 export const TopHUD: React.FC<Props> = ({
@@ -32,6 +37,8 @@ export const TopHUD: React.FC<Props> = ({
   onNextTurn,
   onOpenSchedule,
   onOpenCompetitors,
+  onOpenCommunity,
+  onOpenWarRoom,
 }) => {
   const { currentTurn, totalTurns, availableAP, maxAP, budget, usedCapa, maxCapa, ceoTrust, cfoTrust, legalRisk } =
     gameState;
@@ -39,7 +46,12 @@ export const TopHUD: React.FC<Props> = ({
   const targetVolume = gameState.playerTarget.targetVolume;
   const targetPercent = Math.min(150, Math.round((totalWonVolume / (targetVolume || 1)) * 100));
   const remainingCapa = Math.max(0, maxCapa - usedCapa);
-  const capaUsagePercent = Math.min(100, Math.round((usedCapa / (maxCapa || 1)) * 100));
+
+  // 투입된 인력 계산
+  const deployedStaff = Object.values(gameState.staffAllocation || {}).reduce(
+    (sum, count) => sum + (Number(count) || 0),
+    0
+  );
 
   // 턴 -> 년/월 환산 (2026년 3월 시작)
   const startYear = 2026;
@@ -56,8 +68,8 @@ export const TopHUD: React.FC<Props> = ({
   return (
     <div className="w-full bg-slate-900/95 border-b border-slate-800 px-3 py-2 text-slate-100 shadow-md">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-        {/* Row 1: Company Badge & Turn & Target Progress */}
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Row 1: Company Badge & Turn & Target Progress & Action Hubs */}
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Company Badge */}
           <div className="flex items-center gap-2 px-2.5 py-1.5 rounded bg-slate-800 border border-slate-700">
             <span
@@ -83,15 +95,15 @@ export const TopHUD: React.FC<Props> = ({
             </span>
           </div>
 
-          {/* Quick Action: Schedule Timeline & Competitors Dossier */}
-          <div className="flex items-center gap-1.5">
+          {/* Quick Action Hubs */}
+          <div className="flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => {
                 sound.playClick();
                 onOpenSchedule();
               }}
               className="px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/50 font-pixel text-xs flex items-center gap-1.5 shadow-sm"
-              title="15개 단지 시공사 선정 타임라인 일정표 열기"
+              title="15개 단지 시공사 선정 타임라인 일정표"
             >
               <Calendar className="w-3.5 h-3.5 text-amber-400" />
               <span>선정 일정표</span>
@@ -103,15 +115,42 @@ export const TopHUD: React.FC<Props> = ({
                 onOpenCompetitors();
               }}
               className="px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-red-300 border border-red-500/50 font-pixel text-xs flex items-center gap-1.5 shadow-sm"
-              title="경쟁 건설사 현황 및 전력 분석 열기"
+              title="경쟁 건설사 현황 및 전력 분석"
             >
               <Users className="w-3.5 h-3.5 text-red-400" />
               <span>경쟁사 전력</span>
             </button>
+
+            <button
+              onClick={() => {
+                sound.playClick();
+                onOpenWarRoom();
+              }}
+              className="px-2.5 py-1.5 rounded bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-500/60 font-pixel text-xs flex items-center gap-1.5 shadow-sm"
+              title="수주 전략실 (영업인력 100명 배치 & 브랜드타운)"
+            >
+              <Target className="w-3.5 h-3.5 text-indigo-400" />
+              <span>수주 전략실</span>
+              <span className="text-[10px] px-1 py-0.2 rounded bg-indigo-950 text-indigo-200 font-mono">
+                {deployedStaff}/100
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                sound.playClick();
+                onOpenCommunity();
+              }}
+              className="px-2.5 py-1.5 rounded bg-emerald-900/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-500/60 font-pixel text-xs flex items-center gap-1.5 shadow-sm"
+              title="가온 신시가지 주민 소통방 (가온톡)"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+              <span>가온 소통방</span>
+            </button>
           </div>
 
           {/* Target & Won Volume Progress */}
-          <div className="flex-1 min-w-[200px] px-3 py-1.5 rounded bg-slate-950 border border-slate-800 flex flex-col justify-center">
+          <div className="flex-1 min-w-[180px] px-3 py-1.5 rounded bg-slate-950 border border-slate-800 flex flex-col justify-center">
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="text-slate-400">수주 실적 / 목표</span>
               <span className="font-pixel text-amber-300 font-bold">
@@ -178,8 +217,8 @@ export const TopHUD: React.FC<Props> = ({
           {/* Executive Trust (CEO / CFO) */}
           <div className="flex items-center gap-2 px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800">
             <div className="flex flex-col text-[10px]">
-              <span className="text-slate-400">사장 신뢰: <strong className={ceoTrust >= 70 ? 'text-emerald-400' : 'text-amber-400'}>{ceoTrust}%</strong></span>
-              <span className="text-slate-400">CFO 신뢰: <strong className={cfoTrust >= 70 ? 'text-emerald-400' : 'text-rose-400'}>{cfoTrust}%</strong></span>
+              <span className="text-slate-400">사장: <strong className={ceoTrust >= 70 ? 'text-emerald-400' : 'text-amber-400'}>{ceoTrust}%</strong></span>
+              <span className="text-slate-400">CFO: <strong className={cfoTrust >= 70 ? 'text-emerald-400' : 'text-rose-400'}>{cfoTrust}%</strong></span>
             </div>
           </div>
 
@@ -187,7 +226,7 @@ export const TopHUD: React.FC<Props> = ({
           {legalRisk > 20 && (
             <div className="flex items-center gap-1 px-2 py-1 rounded bg-rose-950/80 border border-rose-500/80 text-rose-300 text-xs animate-pulse">
               <AlertTriangle className="w-3.5 h-3.5" />
-              <span>수사 리스크 {legalRisk}%</span>
+              <span>수사 {legalRisk}%</span>
             </div>
           )}
 

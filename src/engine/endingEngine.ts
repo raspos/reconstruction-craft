@@ -40,6 +40,8 @@ export class EndingEngine {
     const playerWonComplexes: number[] = [];
     let playerWonVolume = 0;
     let playerWonProfit = 0;
+    let soleBidWonCount = 0;
+    let contractTrapCount = 0;
 
     Object.entries(gameState.complexStates).forEach(([cIdStr, st]) => {
       const cId = Number(cIdStr);
@@ -55,6 +57,14 @@ export class EndingEngine {
           0
         );
         playerWonProfit += profit.riskAdjustedProfit;
+
+        if (st.isSoleBid || st.negotiatedContract) {
+          soleBidWonCount++;
+        }
+
+        if (st.contractFulfillment && (st.contractFulfillment.delayMonths >= 6 || st.contractFulfillment.unresolvedDisputes >= 2)) {
+          contractTrapCount++;
+        }
       }
     });
 
@@ -125,53 +135,78 @@ export class EndingEngine {
       (playerSummary.totalWonVolume / (targetVolume || 1)) * 100
     );
 
+    // 인접 단지 수 판정 (브랜드 타운 체인 계산)
+    let maxAdjacentChain = 0;
+    const wonSet = new Set(playerSummary.wonComplexIds);
+    wonSet.forEach((id) => {
+      const comp = complexMap.get(id);
+      if (comp) {
+        let chain = 1;
+        comp.adjacentComplexIds.forEach((adjId) => {
+          if (wonSet.has(adjId)) chain++;
+        });
+        if (chain > maxAdjacentChain) maxAdjacentChain = chain;
+      }
+    });
+
     // 2. 엔딩 분기 조건 판정
     const wonComplexIds = playerSummary.wonComplexIds;
     const hasComplex14 = wonComplexIds.includes(14);
     const hasComplex7 = wonComplexIds.includes(7);
     let chosenEndingId = 'perpetual_director';
 
+    // 1순위: 파멸 / 위기 엔딩
     if (gameState.legalRisk >= 65) {
-      // 1순위: 법적 리스크 임계치 초과 (검찰청 엔딩)
-      chosenEndingId = 'prosecutor_raid';
+      chosenEndingId = 'prosecutor_raid'; // 검찰청 엔딩
     } else if (gameState.usedCapa > gameState.maxCapa * 1.25 && gameState.cfoTrust < 30) {
-      // 캐파 초과 및 부도 위기
-      chosenEndingId = 'workout_nightmare';
-    } else if (playerSummary.totalWonVolume >= targetVolume && playerSummary.avgMarginPercent <= 2.2) {
-      // 승자의 저주: 수주는 많이 했으나 출혈 마진
-      chosenEndingId = 'winners_curse';
+      chosenEndingId = 'workout_nightmare'; // 워크아웃의 망령
+    } else if (contractTrapCount >= 2) {
+      chosenEndingId = 'contract_trap'; // 계약의 덫
+    } else if (playerSummary.totalWonVolume >= targetVolume && (gameState.cfoTrust <= 20 || playerSummary.avgMarginPercent <= 1.8)) {
+      chosenEndingId = 'cfo_nightmare'; // CFO의 악몽
+    } else if (playerSummary.totalWonVolume >= targetVolume && playerSummary.avgMarginPercent <= 2.4) {
+      chosenEndingId = 'winners_curse'; // 승자의 저주
     } else if (playerSummary.totalWonVolume < targetVolume * 0.50) {
-      // 목표 50% 미달 (구조조정 대상)
-      chosenEndingId = 'restructuring_target';
+      chosenEndingId = 'restructuring_target'; // 구조조정 대상
+    }
+    // 2순위: 특수 전략 및 쾌거 엔딩
+    else if (maxAdjacentChain >= 3 && targetAchievementRate >= 90) {
+      chosenEndingId = 'brand_emperor'; // 브랜드 황제 (3개 이상 인접 단지 연계)
+    } else if (soleBidWonCount >= 2 && targetAchievementRate >= 80) {
+      chosenEndingId = 'bloodless_entry'; // 무혈입성 (단독 응찰 수의계약 2건 이상)
+    } else if (
+      playerSummary.wonCount >= 2 &&
+      gameState.totalSalesCostSpent <= 160 &&
+      gameState.rumors.filter((r) => r.investigated).length >= 2
+    ) {
+      chosenEndingId = 'intel_master'; // 정보전의 승리자
+    } else if (
+      targetAchievementRate >= 90 &&
+      playerSummary.avgMarginPercent >= 5.0 &&
+      gameState.cfoTrust >= 75
+    ) {
+      chosenEndingId = 'negotiation_master'; // 협상의 마술사
     } else if (hasComplex14 && hasComplex7) {
-      // 랜드마크 독식 (14단지 & 7단지 동시 확보)
-      chosenEndingId = 'landmark_monopolist';
+      chosenEndingId = 'landmark_monopolist'; // 랜드마크 독식 (14단지 & 7단지)
     } else if (gameState.legalRisk === 0 && playerSummary.wonCount >= 2 && gameState.companyReputation >= 85) {
-      // 클린 수주왕 (리스크 0, 높은 평판)
-      chosenEndingId = 'clean_bidding_champion';
+      chosenEndingId = 'clean_bidding_champion'; // 클린 수주왕
     } else if (playerSummary.profitRank === 1 && playerSummary.avgMarginPercent >= 5.2) {
-      // 알짜배기 수주왕 (실질 이익 1위)
-      chosenEndingId = 'margin_king';
+      chosenEndingId = 'margin_king'; // 알짜배기 수주왕
     } else if (playerSummary.wonCount >= 5 && targetAchievementRate >= 120) {
-      // 재건축 황제
-      chosenEndingId = 'emperor_of_reconstruction';
+      chosenEndingId = 'emperor_of_reconstruction'; // 재건축 황제
     } else if (
       targetAchievementRate >= 100 &&
       gameState.cfoTrust >= 75 &&
       gameState.ceoTrust >= 75 &&
       playerSummary.profitRank <= 2
     ) {
-      // 사장 승진
-      chosenEndingId = 'ceo_promotion';
+      chosenEndingId = 'ceo_promotion'; // 사장 승진
     } else if (playerSummary.volumeRank === 1) {
-      // 올해의 수주왕
-      chosenEndingId = 'order_king_of_year';
+      chosenEndingId = 'order_king_of_year'; // 올해의 수주왕
     } else if (gameState.legalRisk >= 35 && targetAchievementRate >= 90 && gameState.cfoTrust < 40) {
-      // 풍운아의 은퇴
-      chosenEndingId = 'maverick_retirement';
+      chosenEndingId = 'maverick_retirement'; // 풍운아의 은퇴
     } else {
-      // 만년 영업본부장
-      chosenEndingId = 'perpetual_director';
+      chosenEndingId = 'perpetual_director'; // 만년 영업본부장
     }
 
     const ending =

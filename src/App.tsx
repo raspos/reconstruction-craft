@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { GameEngine } from './engine/gameEngine';
-import { GameState, ComplexData, PlayerTarget } from './types/game';
+import { GameState, ComplexData, PlayerTarget, BidProposal } from './types/game';
 import { CONSTRUCTION_COMPANIES } from './data/companies';
 import { ScheduleMasterplanId } from './data/schedules';
 import { CraftUniverseNavbar } from './components/CraftUniverseNavbar';
@@ -16,10 +16,13 @@ import { DataLabModal } from './components/DataLabModal';
 import { BalanceSimulatorModal } from './components/BalanceSimulatorModal';
 import { ScheduleTimelineModal } from './components/ScheduleTimelineModal';
 import { CompetitorRosterModal } from './components/CompetitorRosterModal';
+import { ProposalBuilderModal } from './components/ProposalBuilderModal';
+import { VirtualCommunityModal } from './components/VirtualCommunityModal';
+import { StrategyWarRoomModal } from './components/StrategyWarRoomModal';
 import { saveGameToStorage, loadGameFromStorage, clearSavedGame } from './utils/storage';
 import { formatKRW } from './utils/formatters';
 import { sound } from './utils/sound';
-import { Box, Map, History, Users, Calendar } from 'lucide-react';
+import { Box, Map, History, Users, Calendar, MessageSquare, Target } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [engine, setEngine] = useState<GameEngine | null>(null);
@@ -29,10 +32,13 @@ export const App: React.FC = () => {
 
   // Modals
   const [selectedComplexId, setSelectedComplexId] = useState<number | null>(null);
+  const [proposalComplex, setProposalComplex] = useState<ComplexData | null>(null);
   const [isDataLabOpen, setIsDataLabOpen] = useState(false);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isCompetitorModalOpen, setIsCompetitorModalOpen] = useState(false);
+  const [isCommunityOpen, setIsCommunityOpen] = useState(false);
+  const [isWarRoomOpen, setIsWarRoomOpen] = useState(false);
 
   const [turnResultData, setTurnResultData] = useState<{
     isOpen: boolean;
@@ -79,6 +85,52 @@ export const App: React.FC = () => {
     } else {
       sound.playWarningAlert();
       showToast(result.message);
+    }
+  };
+
+  // 입찰 제안서 제출
+  const handleSubmitProposal = (proposal: BidProposal, consortiumPartnerId?: string | null) => {
+    if (!engine || !proposalComplex) return;
+    const result = engine.submitPlayerProposal(proposalComplex.id, proposal, consortiumPartnerId);
+    setGameState({ ...engine.getState() });
+
+    if (result.success) {
+      sound.playGavelSuccess();
+      showToast(
+        `[제안서 접수] ${proposalComplex.name} 맞춤 제안서 공식 접수 완료! (예상 마진: ${result.evalResult.effectiveMarginPercent}%)`
+      );
+      setProposalComplex(null);
+    } else {
+      sound.playWarningAlert();
+      showToast(result.message);
+    }
+  };
+
+  // 영업 인력(100명) 재배치
+  const handleAllocateStaff = (allocations: Record<number, number>) => {
+    if (!engine) return;
+    const res = engine.allocateStaff(allocations);
+    setGameState({ ...engine.getState() });
+    if (res.success) {
+      sound.playClick();
+      showToast(res.message);
+    } else {
+      sound.playWarningAlert();
+      showToast(res.message);
+    }
+  };
+
+  // 경쟁사 첩보 조사
+  const handleInvestigateCompetitor = (complexId: number, competitorId: string) => {
+    if (!engine) return;
+    const res = engine.investigateCompetitor(complexId, competitorId);
+    setGameState({ ...engine.getState() });
+    if (res.success) {
+      sound.playClick();
+      showToast(res.message);
+    } else {
+      sound.playWarningAlert();
+      showToast(res.message);
     }
   };
 
@@ -129,6 +181,7 @@ export const App: React.FC = () => {
       setGameState(null);
       setPhase('SELECT');
       setSelectedComplexId(null);
+      setProposalComplex(null);
     }
   };
 
@@ -220,6 +273,8 @@ export const App: React.FC = () => {
         onNextTurn={handleNextTurn}
         onOpenSchedule={() => setIsScheduleModalOpen(true)}
         onOpenCompetitors={() => setIsCompetitorModalOpen(true)}
+        onOpenCommunity={() => setIsCommunityOpen(true)}
+        onOpenWarRoom={() => setIsWarRoomOpen(true)}
       />
 
       {/* Toast Notification */}
@@ -277,7 +332,7 @@ export const App: React.FC = () => {
 
         {/* Map View Mode Switcher Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h2 className="font-pixel text-base sm:text-lg font-bold text-white">
               가온 신시가지 15개 단지 수주 관제 지도
             </h2>
@@ -290,6 +345,26 @@ export const App: React.FC = () => {
             >
               <Calendar className="w-3 h-3 text-amber-400" />
               <span>전체 선정 일정표</span>
+            </button>
+            <button
+              onClick={() => {
+                sound.playClick();
+                setIsWarRoomOpen(true);
+              }}
+              className="text-xs px-2 py-0.5 rounded bg-indigo-950/60 border border-indigo-500/60 text-indigo-300 font-pixel flex items-center gap-1 hover:bg-indigo-900/60"
+            >
+              <Target className="w-3 h-3 text-indigo-400" />
+              <span>수주 전략실</span>
+            </button>
+            <button
+              onClick={() => {
+                sound.playClick();
+                setIsCommunityOpen(true);
+              }}
+              className="text-xs px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/60 text-emerald-300 font-pixel flex items-center gap-1 hover:bg-emerald-900/60"
+            >
+              <MessageSquare className="w-3 h-3 text-emerald-400" />
+              <span>주민 소통방</span>
             </button>
           </div>
 
@@ -366,6 +441,24 @@ export const App: React.FC = () => {
           gameState={gameState}
           onClose={() => setSelectedComplexId(null)}
           onExecuteAction={handleExecuteAction}
+          onOpenProposalBuilder={(comp) => {
+            setSelectedComplexId(null);
+            setProposalComplex(comp);
+          }}
+          onInvestigateCompetitor={handleInvestigateCompetitor}
+        />
+      )}
+
+      {/* Proposal Builder Modal */}
+      {proposalComplex && (
+        <ProposalBuilderModal
+          complex={proposalComplex}
+          playerCompany={playerCompany}
+          allCompanies={CONSTRUCTION_COMPANIES}
+          existingProposal={gameState.complexStates[proposalComplex.id]?.playerProposal}
+          consortiumPartnerId={gameState.complexStates[proposalComplex.id]?.consortiumPartnerId}
+          onClose={() => setProposalComplex(null)}
+          onSubmit={handleSubmitProposal}
         />
       )}
 
@@ -396,6 +489,31 @@ export const App: React.FC = () => {
           complexes={engine.allComplexes}
           onClose={() => setIsCompetitorModalOpen(false)}
           onSelectComplex={(id) => setSelectedComplexId(id)}
+        />
+      )}
+
+      {/* Virtual Community Modal (가온 소통방) */}
+      {isCommunityOpen && (
+        <VirtualCommunityModal
+          posts={gameState.communityPosts}
+          complexes={engine.allComplexes}
+          currentTurn={gameState.currentTurn}
+          onClose={() => setIsCommunityOpen(false)}
+        />
+      )}
+
+      {/* Strategy War Room Modal (수주 전략실) */}
+      {isWarRoomOpen && (
+        <StrategyWarRoomModal
+          complexes={engine.allComplexes}
+          complexStates={gameState.complexStates}
+          staffAllocation={gameState.staffAllocation}
+          totalSalesStaff={gameState.totalSalesStaff}
+          externalProjects={gameState.externalProjects}
+          allCompanies={CONSTRUCTION_COMPANIES}
+          playerCompanyId={gameState.playerCompanyId}
+          onClose={() => setIsWarRoomOpen(false)}
+          onAllocateStaff={handleAllocateStaff}
         />
       )}
 

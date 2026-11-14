@@ -17,6 +17,7 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
     flavorDescription: '국내 최고 수준의 신용도와 압도적인 브랜드 선호도를 자랑합니다. 무리한 출혈 경쟁을 지양하고 선별 수주를 원칙으로 하여, 조합원들의 자연스러운 지지를 이끌어냅니다.',
     startingBudget: 350, // 350억원
     startingAP: 5,
+    salesStaffCount: 100,
     personality: 'profit_conservative',
     attributes: {
       funds: 95,          // 자금력 최상
@@ -40,6 +41,7 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
     flavorDescription: '국내 최대 시공 캐파와 강력한 자금 동원력을 보유한 거인입니다. 상징성 높은 대형 랜드마크 수주에 사활을 걸며, 과감한 베팅으로 경쟁사를 압도합니다.',
     startingBudget: 400, // 400억원
     startingAP: 6,
+    salesStaffCount: 110,
     personality: 'landmark_obsessed',
     attributes: {
       funds: 92,
@@ -63,6 +65,7 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
     flavorDescription: '국내 최고 수준의 영업 기동력과 OS 요원 조직력을 갖추고 있습니다. 밀착 스킨십과 과감한 현장 프로모션으로 조합원 표심을 단숨에 끌어올립니다.',
     startingBudget: 320,
     startingAP: 6,
+    salesStaffCount: 120,
     personality: 'aggressive_expansion',
     attributes: {
       funds: 78,
@@ -86,6 +89,7 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
     flavorDescription: '주택 시장에서 가장 세련된 커뮤니티와 외관 특화 설계를 제안합니다. 고급화에 민감한 중상류층 조합원들의 지지를 확보하는 데 최적화되어 있습니다.',
     startingBudget: 310,
     startingAP: 5,
+    salesStaffCount: 100,
     personality: 'opportunist',
     attributes: {
       funds: 80,
@@ -109,6 +113,7 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
     flavorDescription: '철저한 손익 중심 수주 전략과 독보적인 원가 관리력을 자랑합니다. 화려한 수주액보다 실제 회사가 쥐는 알짜배기 마진을 극대화하는 실속형 강자입니다.',
     startingBudget: 280,
     startingAP: 5,
+    salesStaffCount: 90,
     personality: 'profit_conservative',
     attributes: {
       funds: 85,
@@ -132,6 +137,7 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
     flavorDescription: '모그룹의 금융 신인도를 등에 업고 LTV 100% 이주비 지원, 무이자 사업비 대여 등 공격적인 금융 패키지로 조합원들의 현실적인 고민을 파고듭니다.',
     startingBudget: 330,
     startingAP: 5,
+    salesStaffCount: 95,
     personality: 'finance_fighter',
     attributes: {
       funds: 84,
@@ -155,6 +161,7 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
     flavorDescription: '복합 상업시설 개발 노하우와 공격적인 영업을 겸비했습니다. 특정 경쟁사가 우세한 단지를 집요하게 물고 늘어져 판도를 뒤흔드는 견제력이 뛰어납니다.',
     startingBudget: 260,
     startingAP: 5,
+    salesStaffCount: 90,
     personality: 'blocker_rivalry',
     attributes: {
       funds: 76,
@@ -178,6 +185,7 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
     flavorDescription: '대형사들의 경쟁이 치열하지 않은 중형 알짜 단지나 15단지 같은 틈새 시장을 신속하게 선점합니다. 리스크를 두려워하지 않고 높은 이익률을 집요하게 추구합니다.',
     startingBudget: 240,
     startingAP: 5,
+    salesStaffCount: 85,
     personality: 'small_medium_focus',
     attributes: {
       funds: 70,
