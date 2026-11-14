@@ -309,6 +309,18 @@ export class GameEngine {
       throw new Error('단지를 찾을 수 없습니다.');
     }
 
+    // 단일 건설사 수주 한도(최대 5개 단지) 검증
+    const playerWonCount = Object.values(this.state.complexStates).filter(
+      (st) => st.winnerId === this.state.playerCompanyId
+    ).length;
+    if (playerWonCount >= 5) {
+      return {
+        success: false,
+        message: '시공능력 및 반독점 규제(단일 건설사 최대 5개 단지 상한)에 따라 추가 입찰이 제한됩니다. (현재 5개 단지 수주 완료)',
+        evalResult: evaluateProposal(proposal, complex, playerCompany),
+      };
+    }
+
     // 컨소시엄 가능 여부 검증
     if (consortiumPartnerId && !complex.biddingRules.consortiumAllowed) {
       return {
@@ -432,6 +444,17 @@ export class GameEngine {
 
     if (bState.currentStage === 'contracted' || bState.winnerId) {
       return { success: false, message: '이미 시공사 선정이 완료된 단지입니다.' };
+    }
+
+    // 단일 건설사 수주 한도(최대 5개 단지 제한)
+    const playerWonCount = Object.values(this.state.complexStates).filter(
+      (st) => st.winnerId === this.state.playerCompanyId
+    ).length;
+    if (playerWonCount >= 5 && action.id !== 'withdraw_bid') {
+      return {
+        success: false,
+        message: '시공능력 및 반독점 규제(단일 건설사 최대 5개 단지 상한)에 도달하여 추가 영업이 제한됩니다. (현재 5개 단지 수주 완료)',
+      };
     }
 
     // 자원 소모
@@ -781,10 +804,22 @@ export class GameEngine {
       this.allComplexes.forEach((c) => {
         const bs = this.state.complexStates[c.id];
         if (bs && bs.currentStage !== 'contracted') {
+          const getWonCount = (bId: string) => {
+            return bId === this.state.playerCompanyId
+              ? Object.values(this.state.complexStates).filter((st) => st.winnerId === bId).length
+              : (this.state.competitorStates[bId]?.wonComplexIds.length || 0);
+          };
+
           const validBuilders = Object.entries(bs.supportScores)
-            .filter(([, s]) => !s.isWithdrawn)
+            .filter(([bId, s]) => !s.isWithdrawn && getWonCount(bId) < 5)
             .sort((a, b) => b[1].totalFavorability - a[1].totalFavorability);
-          const winnerId = validBuilders.length > 0 ? validBuilders[0][0] : 'taeseong';
+
+          let winnerId = validBuilders.length > 0 ? validBuilders[0][0] : null;
+          if (!winnerId) {
+            const eligible = CONSTRUCTION_COMPANIES.filter((comp) => getWonCount(comp.id) < 5);
+            winnerId = eligible.length > 0 ? eligible[0].id : 'taeseong';
+          }
+
           const winnerComp = CONSTRUCTION_COMPANIES.find((comp) => comp.id === winnerId)!;
           bs.winnerId = winnerId;
           bs.currentStage = 'contracted';
@@ -880,10 +915,22 @@ export class GameEngine {
       const isUrgent = this.state.currentTurn >= this.state.totalTurns - 2;
       if (bState.isRebid || isUrgent) {
         // 2회차 유찰 또는 기한 임박 시 수의계약으로 전환하여 즉시 확정
+        const getWonCount = (bId: string) => {
+          return bId === this.state.playerCompanyId
+            ? Object.values(this.state.complexStates).filter((st) => st.winnerId === bId).length
+            : (this.state.competitorStates[bId]?.wonComplexIds.length || 0);
+        };
+
         const validBuilders = Object.entries(bState.supportScores)
-          .filter(([, s]) => !s.isWithdrawn)
+          .filter(([bId, s]) => !s.isWithdrawn && getWonCount(bId) < 5)
           .sort((a, b) => b[1].totalFavorability - a[1].totalFavorability);
-        const fallbackWinner = validBuilders.length > 0 ? validBuilders[0][0] : 'taeseong';
+
+        let fallbackWinner = validBuilders.length > 0 ? validBuilders[0][0] : null;
+        if (!fallbackWinner) {
+          const eligible = CONSTRUCTION_COMPANIES.filter((comp) => getWonCount(comp.id) < 5);
+          fallbackWinner = eligible.length > 0 ? eligible[0].id : 'taeseong';
+        }
+
         const fallbackComp = CONSTRUCTION_COMPANIES.find((c) => c.id === fallbackWinner)!;
 
         bState.winnerId = fallbackWinner;

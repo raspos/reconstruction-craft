@@ -143,8 +143,18 @@ function runSingleSimulation(gameIndex, rng) {
           pragmaticScore += 5;
         }
 
+        // 단일 건설사 최대 5개 단지 제한
+        if (companyWonCount[comp.id] >= 5) return;
+
         // 반독점/캐파 과부하 페널티 (조합원 공기 지연 및 독점 우려)
-        if (companyWonCount[comp.id] === 1) {
+        if (companyWonCount[comp.id] >= 3) {
+          pragmaticScore -= 22;
+          floatingScore -= 22;
+          brandScore -= 15;
+        } else if (companyWonCount[comp.id] === 2) {
+          pragmaticScore -= 14;
+          floatingScore -= 14;
+        } else if (companyWonCount[comp.id] === 1) {
           pragmaticScore -= 8;
           floatingScore -= 8;
         }
@@ -197,6 +207,16 @@ function runSingleSimulation(gameIndex, rng) {
         } else if (active.length > 1) {
           active.sort((a, b) => (b.appeal + rng.range(-4, 4)) - (a.appeal + rng.range(-4, 4)));
           const winner = active[0].comp;
+          complexState[c.id].winnerId = winner.id;
+          wonComplexes[winner.id].push(c.id);
+          companyWonVolume[winner.id] += c.cost;
+          companyWonProfit[winner.id] += c.cost * (c.margin / 100);
+          companyWonCount[winner.id]++;
+          companyCapaUsed[winner.id] += c.cost;
+        } else {
+          // 비상 fallback (단일 건설사 최대 5개 미만인 건설사 중 선택)
+          const eligible = COMPANIES.filter((cp) => companyWonCount[cp.id] < 5);
+          const winner = eligible.length > 0 ? eligible[rng.range(0, eligible.length - 1)] : COMPANIES[0];
           complexState[c.id].winnerId = winner.id;
           wonComplexes[winner.id].push(c.id);
           companyWonVolume[winner.id] += c.cost;

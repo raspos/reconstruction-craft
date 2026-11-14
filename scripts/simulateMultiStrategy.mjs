@@ -120,8 +120,8 @@ function runSingleSimulation(gameIndex, strategy, rng) {
         const remaining = comp.capa - companyCapaUsed[comp.id];
         if (remaining < c.cost) return;
 
-        // 2건 이상 수주 시 자제
-        if (companyWonCount[comp.id] >= 2) return;
+        // 단일 건설사 최대 5개 단지 제한 (5개 이상 수주 불가)
+        if (companyWonCount[comp.id] >= 5) return;
 
         let brandScore = comp.brand * 0.9;
         let pragmaticScore = comp.costComp * 0.75 + comp.finance * 0.25;
@@ -140,10 +140,20 @@ function runSingleSimulation(gameIndex, strategy, rng) {
           }
         }
 
-        // 반독점 페널티
-        if (companyWonCount[comp.id] === 1) {
-          pragmaticScore -= 8;
-          floatingScore -= 8;
+        // 반독점 페널티 (수주 건수가 늘어날수록 조합원 경계 강화)
+        if (companyWonCount[comp.id] === 4) {
+          pragmaticScore -= 30;
+          floatingScore -= 30;
+          brandScore -= 20;
+        } else if (companyWonCount[comp.id] === 3) {
+          pragmaticScore -= 20;
+          floatingScore -= 20;
+        } else if (companyWonCount[comp.id] === 2) {
+          pragmaticScore -= 12;
+          floatingScore -= 12;
+        } else if (companyWonCount[comp.id] === 1) {
+          pragmaticScore -= 6;
+          floatingScore -= 6;
         }
 
         const totalAppeal =
@@ -160,8 +170,9 @@ function runSingleSimulation(gameIndex, strategy, rng) {
       const isUrgent = turn >= 16;
       if ((turn >= c.startTurn + 3 || isUrgent) && !complexState[c.id].winnerId) {
         if (candidates.length === 0) {
-          // 비상 fallback
-          const fallback = COMPANIES[rng.range(0, COMPANIES.length - 1)];
+          // 비상 fallback (최대 5개 미만인 건설사 중 선별)
+          const eligible = COMPANIES.filter(cp => companyWonCount[cp.id] < 5);
+          const fallback = eligible.length > 0 ? eligible[rng.range(0, eligible.length - 1)] : COMPANIES[0];
           complexState[c.id].winnerId = fallback.id;
           wonComplexes[fallback.id].push(c.id);
           companyWonVolume[fallback.id] += c.cost;

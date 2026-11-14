@@ -216,19 +216,25 @@ export class AICompetitorEngine {
       return 0; // 캐파 한계 초과
     }
 
-    // 2. 이미 수주한 단지 수가 많으면 추가 수주 욕구 대폭 감소 (반독점 밸런스)
+    // 2. 이미 수주한 단지 수가 많으면 추가 수주 욕구 대폭 감소 및 최대 5개 상한
     const compState = gameState.competitorStates[company.id];
     const wonCount = compState?.wonComplexIds.length || 0;
-    if (wonCount >= 2) {
-      return 0; // 2건 이상 수주 시 자사 리스크 관리로 신규 입찰 전면 중단
+    if (wonCount >= 5) {
+      return 0; // 단일 건설사 최대 5개 단지 제한: 추가 입찰 및 영업 전면 차단
     }
 
     // 기본 점수: 지정된 주력 타깃 단지 여부에 따른 차등
     const isTarget = company.targetComplexIds.includes(complex.id);
     let score = isTarget ? 65 : 25;
 
-    if (wonCount === 1) {
-      score -= 20; // 1건 수주 후에는 입찰 기준이 대폭 엄격해짐
+    if (wonCount === 4) {
+      score -= 35; // 4건 수주 시 마지막 5번째 단지는 매우 보수적으로 판단
+    } else if (wonCount === 3) {
+      score -= 25;
+    } else if (wonCount === 2) {
+      score -= 15;
+    } else if (wonCount === 1) {
+      score -= 5;
     }
 
     switch (company.personality) {

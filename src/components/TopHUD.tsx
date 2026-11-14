@@ -47,6 +47,10 @@ export const TopHUD: React.FC<Props> = ({
   const targetPercent = Math.min(150, Math.round((totalWonVolume / (targetVolume || 1)) * 100));
   const remainingCapa = Math.max(0, maxCapa - usedCapa);
 
+  const wonCount = Object.values(gameState.complexStates).filter(
+    (st) => st.winnerId === gameState.playerCompanyId
+  ).length;
+
   // 투입된 인력 계산
   const deployedStaff = Object.values(gameState.staffAllocation || {}).reduce(
     (sum, count) => sum + (Number(count) || 0),
@@ -150,9 +154,16 @@ export const TopHUD: React.FC<Props> = ({
           </div>
 
           {/* Target & Won Volume Progress */}
-          <div className="flex-1 min-w-[180px] px-3 py-1.5 rounded bg-slate-950 border border-slate-800 flex flex-col justify-center">
+          <div className="flex-1 min-w-[200px] px-3 py-1.5 rounded bg-slate-950 border border-slate-800 flex flex-col justify-center">
             <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-slate-400">수주 실적 / 목표</span>
+              <span className="text-slate-400 flex items-center gap-1.5">
+                <span>수주 실적</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
+                  wonCount >= 5 ? 'bg-rose-950 text-rose-300 border border-rose-500/50' : 'bg-slate-800 text-sky-300'
+                }`}>
+                  {wonCount}/5곳 {wonCount >= 5 ? '(최대도달)' : '(최대5곳)'}
+                </span>
+              </span>
               <span className="font-pixel text-amber-300 font-bold">
                 {formatKRW(totalWonVolume)} / {formatKRW(targetVolume)} ({targetPercent}%)
               </span>

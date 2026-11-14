@@ -106,6 +106,27 @@ export function simulateGeneralAssemblyVote(
     const soleId = participatingCompanyIds[0];
     const comp = companyMap.get(soleId);
     const compName = comp?.name || '미상';
+    const alreadyWon = builderWonCounts[soleId] || 0;
+
+    // 단일 건설사 수주 한도 상한 (최대 5개 단지 제한)
+    if (alreadyWon >= 5) {
+      return {
+        complexId: complex.id,
+        complexName: complex.name,
+        totalEligibleVoters,
+        totalCastVotes: 0,
+        winnerId: null,
+        winnerName: null,
+        isSoleBid: true,
+        isRebid: true,
+        negotiatedContract: false,
+        bidders: [],
+        finalProfitMargin: complex.baseExpectedProfitMargin,
+        contractPrice: complex.expectedCost,
+        assemblySummary: `${compName}이(가) 단독 응찰하였으나, 독점 방지 상한 규정(단일 건설사 최대 5개 단지 제한)에 도달하여 입찰 자격이 박탈되어 유찰 처리되었습니다.`,
+        keyVoteFactor: '단일 건설사 수주 상한(최대 5개 단지) 초과',
+      };
+    }
 
     // 정비사업 시공사 선정 기준 법령 적용:
     // 1회차 입찰에서 단독 응찰 시: 2개사 이상 경쟁입찰 요건 미충족으로 자동 유찰 (수의계약 불가)
@@ -296,30 +317,39 @@ export function simulateGeneralAssemblyVote(
       }
     });
 
-    // 4. 조합의 반독점 및 캐파 과부하(공기 지연 리스크) 페널티 (특정 건설사 독식 방지)
+    // 4. 조합의 반독점 및 캐파 과부하(공기 지연 리스크) 페널티 (단일 건설사 최대 5개 제한)
     const alreadyWonCount = builderWonCounts[compId] || 0;
     const remainingCapa = builderRemainingCapas[compId] ?? comp.attributes.capa;
 
-    if (alreadyWonCount === 1) {
-      // 1건 수주 상태: 주민들의 인력 분산 및 일정 지연 우려 발생
-      pragmatistAppeal -= 8;
-      floatingAppeal -= 8;
-    } else if (alreadyWonCount >= 2) {
-      // 2건 이상 수주 상태: 독점 횡포 우려 및 공기 지연/하자 위험에 대한 조합원들의 거센 경계
-      brandAppeal -= 12;
-      pragmatistAppeal -= 20;
-      floatingAppeal -= 20;
-    }
+    const isExceededMaxCap = alreadyWonCount >= 5;
 
-    // 잔여 캐파 부족 시 추가 페널티
-    if (remainingCapa < complex.expectedCost * 1.3) {
-      pragmatistAppeal -= 14;
-      floatingAppeal -= 12;
-    }
+    if (isExceededMaxCap) {
+      // 5개 이상 수주 시: 반독점 및 시공능력 초과로 전면 득표 배제 (0점)
+      brandAppeal = 0;
+      pragmatistAppeal = 0;
+      floatingAppeal = 0;
+    } else {
+      if (alreadyWonCount === 1) {
+        // 1건 수주 상태: 주민들의 인력 분산 및 일정 지연 우려 발생
+        pragmatistAppeal -= 8;
+        floatingAppeal -= 8;
+      } else if (alreadyWonCount >= 2) {
+        // 2건 이상 수주 상태: 독점 횡포 우려 및 공기 지연/하자 위험에 대한 조합원들의 거센 경계
+        brandAppeal -= 12;
+        pragmatistAppeal -= 20;
+        floatingAppeal -= 20;
+      }
 
-    // 현장 분위기 랜덤성 (-5 ~ +5)
-    const luckNoise = (Math.random() - 0.5) * 10;
-    floatingAppeal += luckNoise;
+      // 잔여 캐파 부족 시 추가 페널티
+      if (remainingCapa < complex.expectedCost * 1.3) {
+        pragmatistAppeal -= 14;
+        floatingAppeal -= 12;
+      }
+
+      // 현장 분위기 랜덤성 (-5 ~ +5)
+      const luckNoise = (Math.random() - 0.5) * 10;
+      floatingAppeal += luckNoise;
+    }
 
     return {
       companyId: compId,
@@ -327,23 +357,24 @@ export function simulateGeneralAssemblyVote(
       isPlayer,
       isConsortium,
       partnerName: partnerComp?.name,
-      brandAppeal: Math.max(10, brandAppeal),
-      pragmatistAppeal: Math.max(10, pragmatistAppeal),
-      floatingAppeal: Math.max(10, floatingAppeal),
+      brandAppeal: isExceededMaxCap ? 0 : Math.max(10, brandAppeal),
+      pragmatistAppeal: isExceededMaxCap ? 0 : Math.max(10, pragmatistAppeal),
+      floatingAppeal: isExceededMaxCap ? 0 : Math.max(10, floatingAppeal),
       effectiveMarginPercent: evalRes.effectiveMarginPercent,
       contractPrice: evalRes.totalCost,
     };
   });
 
   // 계층별 득표 배분 (소프트맥스/비례 가중치)
-  const sumBrand = rawBidders.reduce((sum, b) => sum + Math.max(1, b.brandAppeal), 0);
-  const sumPragmatic = rawBidders.reduce((sum, b) => sum + Math.max(1, b.pragmatistAppeal), 0);
-  const sumFloating = rawBidders.reduce((sum, b) => sum + Math.max(1, b.floatingAppeal), 0);
+  const sumBrand = rawBidders.reduce((sum, b) => sum + (b.brandAppeal > 0 ? b.brandAppeal : 0), 0) || 1;
+  const sumPragmatic = rawBidders.reduce((sum, b) => sum + (b.pragmatistAppeal > 0 ? b.pragmatistAppeal : 0), 0) || 1;
+  const sumFloating = rawBidders.reduce((sum, b) => sum + (b.floatingAppeal > 0 ? b.floatingAppeal : 0), 0) || 1;
 
   const bidderDetails: BidderVoteDetail[] = rawBidders.map(b => {
-    const bVotes = Math.round(brandVoterCount * (b.brandAppeal / sumBrand));
-    const pVotes = Math.round(pragmatistVoterCount * (b.pragmatistAppeal / sumPragmatic));
-    const fVotes = Math.round(floatingVoterCount * (b.floatingAppeal / sumFloating));
+    const isExceeded = (builderWonCounts[b.companyId] || 0) >= 5;
+    const bVotes = isExceeded ? 0 : Math.round(brandVoterCount * (b.brandAppeal / sumBrand));
+    const pVotes = isExceeded ? 0 : Math.round(pragmatistVoterCount * (b.pragmatistAppeal / sumPragmatic));
+    const fVotes = isExceeded ? 0 : Math.round(floatingVoterCount * (b.floatingAppeal / sumFloating));
     const totalVotes = bVotes + pVotes + fVotes;
     const share = Number(((totalVotes / totalCastVotes) * 100).toFixed(1));
     const compositeScore = Math.round(

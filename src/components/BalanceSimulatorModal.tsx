@@ -111,6 +111,12 @@ export const BalanceSimulatorModal: React.FC<Props> = ({ onClose }) => {
             </div>
           </div>
 
+          {/* 5-Complex Cap Rule Indicator */}
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-indigo-950/40 border border-indigo-500/40 text-indigo-200 text-xs font-mono">
+            <span className="font-pixel text-amber-400 font-bold shrink-0">🛡️ 반독점 수주 상한 규정:</span>
+            <span>단일 건설사의 독식 및 부실시공 방지를 위해 1개사당 <strong className="text-white">최대 5개 단지까지만 수주</strong>할 수 있도록 제한됩니다. (5개 도달 시 신규 입찰 및 수의계약 자동 차단)</span>
+          </div>
+
           {/* Company Win Rates & Averages Table */}
           <div className="space-y-2">
             <h4 className="font-pixel text-xs font-bold text-amber-400 flex items-center gap-1.5">
