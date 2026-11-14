@@ -87,11 +87,8 @@ export const StrategyWarRoomModal: React.FC<StrategyWarRoomModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-bold text-white tracking-wide">
-                주택영업 전략 상황실 (Strategy War Room)
+                주택영업 전략상황실
               </h2>
-              <p className="text-xs text-slate-400">
-                영업 인력 100명 전술 배치, 가온 브랜드 타운 연계망, 외부 메가 수주전을 총괄 지휘합니다.
-              </p>
             </div>
           </div>
           <button

@@ -534,9 +534,16 @@ export const App: React.FC = () => {
       <footer className="w-full bg-slate-950 border-t border-slate-800/80 px-4 py-3 mt-6 shrink-0">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 font-pixel">
           <div className="flex items-center gap-2">
-            <span className="text-slate-400 font-bold">CRAFT UNIVERSE Episode 3</span>
+            <a
+              href="https://raspos.github.io/databrew/"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#f2c4a0] hover:text-white font-bold font-mono transition-colors"
+            >
+              databrew
+            </a>
             <span>•</span>
-            <span>재건축 크래프트: 시공사 수주전쟁</span>
+            <span className="text-slate-300 font-bold">재건축 크래프트: 시공사 수주전쟁</span>
           </div>
 
           <VisitorCounter />
@@ -560,7 +567,7 @@ export const App: React.FC = () => {
               홍담 크래프트
             </a>
             <span>•</span>
-            <span className="text-slate-600">© 2026 CRAFT UNIVERSE</span>
+            <span className="text-slate-600">© databrew</span>
           </div>
         </div>
       </footer>

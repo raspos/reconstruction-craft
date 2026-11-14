@@ -61,14 +61,11 @@ export const ScheduleTimelineModal: React.FC<Props> = ({
             </div>
             <div>
               <h3 className="font-pixel text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                <span>가온 신시가지 15개 단지 시공사 선정 마스터플랜 타임라인</span>
+                <span>15개 단지 시공사 선정 일정표</span>
                 <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-amber-300 font-mono">
                   현재: {currentTurn}턴 ({turnToYearMonth(currentTurn)})
                 </span>
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                각 단지의 사전 영업 개시, 입찰 마감, 시공사 선정 총회 예정 시기를 한눈에 확인하십시오.
-              </p>
             </div>
           </div>
           <button

@@ -82,15 +82,12 @@ export const VirtualCommunityModal: React.FC<VirtualCommunityModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white tracking-wide">
-                  가온 신시가지 주민 소통방 (가온톡)
+                  가온 주민 소통방 (가온톡)
                 </h2>
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono">
                   실시간 턴 {currentTurn}
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                15개 단지 조합원·대의원의 솔직한 여론과 찌라시가 오가는 익명 커뮤니티입니다.
-              </p>
             </div>
           </div>
           <button

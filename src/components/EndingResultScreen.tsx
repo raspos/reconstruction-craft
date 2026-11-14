@@ -258,8 +258,8 @@ export const EndingResultScreen: React.FC<Props> = ({
           </button>
         </div>
 
-        {/* Official databrew & CRAFT UNIVERSE Footer */}
-        <footer className="pt-8 pb-4 text-center text-[11px] text-slate-500 border-t border-slate-900 space-y-2 max-w-xl mx-auto">
+        {/* Official databrew Footer */}
+        <footer className="pt-8 pb-4 text-center text-[11px] text-slate-500 border-t border-slate-900 max-w-xl mx-auto">
           <div className="flex flex-wrap items-center justify-center gap-2 text-slate-400">
             <span>©</span>
             <a
@@ -292,9 +292,6 @@ export const EndingResultScreen: React.FC<Props> = ({
             <span className="text-slate-700">·</span>
             <span className="text-amber-400 font-bold">재건축 크래프트</span>
           </div>
-          <p className="text-[10px] text-slate-600">
-            데이터저널리즘 가상 시뮬레이션 인터랙티브 프로젝트 · CRAFT UNIVERSE Episode 3
-          </p>
         </footer>
       </div>
     </div>

@@ -99,14 +99,11 @@ export const CompetitorRosterModal: React.FC<Props> = ({
             </div>
             <div>
               <h3 className="font-pixel text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                <span>경쟁 건설사 종합 정보망 (8대 건설사 전력 분석)</span>
+                <span>경쟁 건설사 전력 분석</span>
                 <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
                   실시간 첩보
                 </span>
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                경쟁사들의 현재 수주 실적, 잔여 시공 캐파, 주요 타깃 단지 및 영업 전략을 분석합니다.
-              </p>
             </div>
           </div>
           <button

@@ -42,7 +42,7 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
   const [gameMode, setGameMode] = useState<'FULL_24' | 'FAST_12'>('FULL_24');
   const [targetLevel, setTargetLevel] = useState<'SAFE' | 'CHALLENGE' | 'AGGRESSIVE' | 'RECKLESS'>('CHALLENGE');
   const [selectedScheduleId, setSelectedScheduleId] = useState<ScheduleMasterplanId>('STANDARD');
-  const [showSchedulePreview, setShowSchedulePreview] = useState<boolean>(true);
+  const [showSchedulePreview, setShowSchedulePreview] = useState<boolean>(false);
 
   const selectedCompany =
     CONSTRUCTION_COMPANIES.find((c) => c.id === selectedCompanyId) ||
@@ -105,18 +105,12 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
 
       <div className="max-w-6xl mx-auto w-full space-y-6 p-4 sm:p-8 flex-1">
         {/* Title Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/50 text-amber-400 text-xs font-pixel">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>CRAFT UNIVERSE 제3탄 — 턴제 정통 경영·전략 시뮬레이션</span>
-          </div>
+        <div className="text-center space-y-1">
           <h2 className="font-pixel text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
             재건축 크래프트: <span className="text-amber-400">시공사 수주전쟁</span>
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto">
-            가온 신시가지 15개 아파트 단지의 재건축 시공권을 둘러싼 국내 8대 건설사의 치열한 수주전쟁!
-            <br className="hidden sm:inline" />
-            시공사 선정 마스터플랜 일정을 확정하고, 경쟁사들을 압도하여 업계의 왕좌에 오르십시오.
+          <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
+            가온 신시가지 15개 단지 수주전쟁과 조합원 표심 공략
           </p>
         </div>
 
@@ -219,20 +213,20 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
           </div>
         </div>
 
-        {/* 2. 시공사 선정 일정 마스터플랜 확정 (핵심 요구사항) */}
+        {/* 2. 시공사 선정 일정 마스터플랜 */}
         <div className="p-4 sm:p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-amber-400" />
               <h3 className="font-pixel text-base font-bold text-white">
-                2. 가온 신시가지 15개 단지 시공사 선정 일정 마스터플랜 확정
+                2. 시공사 선정 일정
               </h3>
             </div>
             <button
               onClick={() => setShowSchedulePreview(!showSchedulePreview)}
               className="text-xs text-sky-400 hover:text-sky-300 font-pixel underline"
             >
-              {showSchedulePreview ? '일정표 미리보기 접기' : '15개 단지 선정 일정표 미리보기'}
+              {showSchedulePreview ? '일정표 접기 ▲' : '15개 단지 일정표 보기 ▼'}
             </button>
           </div>
 
@@ -319,7 +313,7 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-amber-400" />
               <h4 className="font-pixel text-sm font-bold text-white">
-                3. 올해의 수주 목표 설정
+                3. 수주 목표
               </h4>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -354,7 +348,7 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-sky-400" />
               <h4 className="font-pixel text-sm font-bold text-white">
-                4. 게임 기간 모드 선택
+                4. 진행 기간
               </h4>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -416,8 +410,8 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
           </div>
         </div>
 
-        {/* Official databrew & CRAFT UNIVERSE Footer */}
-        <footer className="pt-8 pb-4 text-center text-[11px] text-slate-500 border-t border-slate-900 space-y-2 max-w-xl mx-auto">
+        {/* Official databrew Footer */}
+        <footer className="pt-8 pb-4 text-center text-[11px] text-slate-500 border-t border-slate-900 max-w-xl mx-auto">
           <div className="flex flex-wrap items-center justify-center gap-2 text-slate-400">
             <span>©</span>
             <a
@@ -450,9 +444,6 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
             <span className="text-slate-700">·</span>
             <span className="text-amber-400 font-bold">재건축 크래프트</span>
           </div>
-          <p className="text-[10px] text-slate-600">
-            데이터저널리즘 가상 시뮬레이션 인터랙티브 프로젝트 · CRAFT UNIVERSE Episode 3
-          </p>
         </footer>
       </div>
     </div>

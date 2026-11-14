@@ -21,12 +21,9 @@ export const RumorBoardPanel: React.FC<Props> = ({
           <div className="flex items-center gap-2">
             <Newspaper className="w-4 h-4 text-amber-400" />
             <h4 className="font-pixel text-xs sm:text-sm font-bold text-slate-200">
-              가온 신시가지 주택정비업계 소문 & 물밑 첩보 (월간 찌라시)
+              업계 동향 및 첩보
             </h4>
           </div>
-          <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
-            * 모든 소문이 진실은 아닙니다. 정보원을 가동하여 실사를 진행할 수 있습니다.
-          </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">

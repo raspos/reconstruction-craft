@@ -60,16 +60,9 @@ export const CraftUniverseNavbar: React.FC<Props> = ({
               <div className="w-8 h-8 rounded-lg bg-amber-500 border border-amber-300 flex items-center justify-center text-slate-950 shadow-md shrink-0 font-bold">
                 <Building2 className="w-4 h-4 text-slate-950" />
               </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-pixel text-[9px] px-1 py-0.2 rounded bg-amber-950/90 border border-amber-500/70 text-amber-300 font-bold">
-                    CRAFT UNIVERSE Ep.3
-                  </span>
-                </div>
-                <h1 className="font-pixel text-xs sm:text-sm text-white font-extrabold tracking-tight whitespace-nowrap leading-none mt-0.5">
-                  재건축 크래프트 <span className="text-amber-400 font-normal">시공사 수주전쟁</span>
-                </h1>
-              </div>
+              <h1 className="font-pixel text-xs sm:text-sm text-white font-extrabold tracking-tight whitespace-nowrap leading-none">
+                재건축 크래프트 <span className="text-amber-400 font-normal">시공사 수주전쟁</span>
+              </h1>
             </div>
           </div>
 
@@ -98,26 +91,21 @@ export const CraftUniverseNavbar: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Center: CRAFT UNIVERSE Switcher */}
-        <nav className="flex items-center gap-1 overflow-x-auto max-w-full py-0.5 scrollbar-none">
+        {/* Center: Other Projects Switcher */}
+        <nav className="flex items-center gap-1.5 overflow-x-auto max-w-full py-0.5 scrollbar-none">
           {CRAFT_UNIVERSE_LINKS.map((link) => (
             <a
               key={link.id}
               href={link.url}
               target={link.active ? '_self' : '_blank'}
               rel="noopener noreferrer"
-              className={`px-2 sm:px-2.5 py-1 rounded text-[11px] sm:text-xs flex items-center gap-1 font-pixel transition-colors whitespace-nowrap border ${
+              className={`px-2.5 py-1 rounded text-[11px] sm:text-xs flex items-center gap-1 font-pixel transition-colors whitespace-nowrap border ${
                 link.active
                   ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold shadow-sm'
                   : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
               }`}
             >
               <span>{link.nameKo}</span>
-              {link.badgeKo && (
-                <span className="text-[9px] px-1 py-0.2 rounded bg-slate-800 text-slate-300">
-                  {link.badgeKo}
-                </span>
-              )}
               {!link.active && <ExternalLink className="w-2.5 h-2.5 opacity-60" />}
             </a>
           ))}

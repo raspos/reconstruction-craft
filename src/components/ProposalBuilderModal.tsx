@@ -79,15 +79,12 @@ export const ProposalBuilderModal: React.FC<ProposalBuilderModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white tracking-wide">
-                  [{complex.name}] 입찰 제안서(사업제안서) 조립 본부
+                  [{complex.name}] 입찰 제안서 작성
                 </h2>
                 <span className="text-xs px-2 py-0.5 rounded bg-slate-700 text-slate-300 font-mono">
                   공사비 {(complex.expectedCost / 10000).toFixed(1)}조원
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                11대 맞춤형 제안 레버리지를 조율하여 조합원의 표심을 공략하고 CFO의 마진을 방어하십시오.
-              </p>
             </div>
           </div>
           <button

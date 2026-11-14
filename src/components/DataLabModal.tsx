@@ -20,11 +20,8 @@ export const DataLabModal: React.FC<Props> = ({ onClose }) => {
             <BookOpen className="w-5 h-5 text-sky-400" />
             <div>
               <h3 className="font-pixel text-base sm:text-lg font-bold text-white">
-                재건축 데이터랩 & 산출 방법론 (Methodology)
+                재건축 데이터랩 & 산출 모델
               </h3>
-              <p className="text-xs text-slate-400">
-                실제 공공 정비계획 데이터 및 건설사 공시 자료 기반 시뮬레이션 모델
-              </p>
             </div>
           </div>
           <button
@@ -140,29 +137,33 @@ export const DataLabModal: React.FC<Props> = ({ onClose }) => {
 
           {activeTab === 'METHODOLOGY' && (
             <div className="space-y-3 font-sans">
-              <div className="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
-                <h4 className="font-pixel text-sm font-bold text-amber-400">
-                  1. 위험조정 예상 영업이익 산출 모델
-                </h4>
-                <p className="text-slate-300 leading-relaxed text-[11px]">
-                  <strong>위험조정 예상 영업이익 =</strong> 계약 공사비 - 직접 공사원가(78~82%) - 현장 간접비(6~8%) -
-                  본사 배부비(4~5%) - 금융 비용(금리 연동) - 위험 충당금(단지별 1~7%) - 수주 영업비용
-                </p>
-                <p className="text-slate-400 text-[10px]">
-                  * 단순히 공사비를 깎아 수주액을 늘릴 경우, 마진율이 1~2% 이하로 급락하여 [승자의 저주] 엔딩을 초래하도록 정밀 설계되었습니다.
-                </p>
-              </div>
+              <details className="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2 group" open>
+                <summary className="font-pixel text-sm font-bold text-amber-400 cursor-pointer list-none flex items-center justify-between">
+                  <span>1. 위험조정 예상 영업이익 산출 모델</span>
+                  <span className="text-[10px] text-slate-500 font-mono group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <div className="pt-2 text-slate-300 leading-relaxed text-[11px] space-y-1">
+                  <p>
+                    <strong>위험조정 예상 영업이익 =</strong> 계약 공사비 - 직접 공사원가 - 현장 간접비 - 본사 배부비 - 금융 비용 - 위험 충당금 - 수주 영업비용
+                  </p>
+                  <p className="text-slate-500 text-[10px]">
+                    * 공사비 저가 출혈 수주 시 마진율 급락 및 재무 리스크 초래
+                  </p>
+                </div>
+              </details>
 
-              <div className="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
-                <h4 className="font-pixel text-sm font-bold text-sky-400">
-                  2. 경쟁사 AI 기대효용(Expected Utility) 및 철수 알고리즘
-                </h4>
-                <p className="text-slate-300 leading-relaxed text-[11px]">
-                  AI는 매 턴 <code>EU = P(win) × ExpectedProfit - Cost - OpportunityCost</code> 수식에 의해 행동합니다.
-                  상대방(플레이어 포함)이 75% 이상의 압도적 지지율을 확보하고 본인의 승률이 18% 미만으로 떨어질 경우,
-                  자원 보존을 위해 과감하게 <strong>전략적 철수(Withdrawal)</strong>를 단행합니다.
-                </p>
-              </div>
+              <details className="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2 group">
+                <summary className="font-pixel text-sm font-bold text-sky-400 cursor-pointer list-none flex items-center justify-between">
+                  <span>2. 경쟁사 AI 기대효용(Expected Utility) 및 철수 알고리즘</span>
+                  <span className="text-[10px] text-slate-500 font-mono group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <div className="pt-2 text-slate-300 leading-relaxed text-[11px]">
+                  <code>EU = P(win) × ExpectedProfit - Cost - OpportunityCost</code>
+                  <p className="mt-1 text-slate-400">
+                    상대방이 압도적 지지율을 확보하여 승률이 임계치 미만으로 떨어질 경우 전략적 철수를 단행합니다.
+                  </p>
+                </div>
+              </details>
             </div>
           )}
         </div>
