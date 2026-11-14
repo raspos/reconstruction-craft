@@ -55,20 +55,19 @@ export function simulateGeneralAssemblyVote(
   const companyMap = new Map<string, CompanyData>(companies.map(c => [c.id, c]));
   const playerCompany = companyMap.get(playerCompanyId);
 
-  // 1. 입찰 참여사 식별
+  // 1. 실제 공식 입찰 확정사 식별 (호감도와 무관하게 명시적 입찰자격 및 보증금 납부사만 참여)
   const participatingCompanyIds: string[] = [];
 
-  // 플레이어 참여 여부
+  // 플레이어 참여 여부 (입찰 확정 및 제안서 제출 완료 시에만 참여)
   if (playerParticipates && playerCompany) {
     participatingCompanyIds.push(playerCompanyId);
   }
 
-  // 경쟁사 참여 여부
+  // 경쟁사 참여 여부 (공식 입찰 등록 hasBid 가 true 인 건설사만 참여)
   Object.entries(state.supportScores).forEach(([compId, stance]) => {
     if (compId === playerCompanyId) return;
     if (stance.isWithdrawn) return;
-    // 입찰 의지 35 이상이거나 이미 입찰을 선언한 경우
-    if (stance.hasBid || stance.hiddenBidIntent >= 35) {
+    if (stance.hasBid) {
       participatingCompanyIds.push(compId);
     }
   });
@@ -108,18 +107,59 @@ export function simulateGeneralAssemblyVote(
     const comp = companyMap.get(soleId);
     const compName = comp?.name || '미상';
 
-    // 재입찰이거나 컨소시엄 허용 단지면 수의계약 가능
-    if (state.isRebid || complex.biddingRules.consortiumAllowed) {
-      const proposal = (soleId === playerCompanyId && playerProposal)
+    // 정비사업 시공사 선정 기준 법령 적용:
+    // 1회차 입찰에서 단독 응찰 시: 2개사 이상 경쟁입찰 요건 미충족으로 자동 유찰 (수의계약 불가)
+    // 2회차 재입찰에서도 단독 응찰 시: 조합 총회에 '수의계약 우선협상대상자 지정 찬반 투표' 부의
+    if (!state.isRebid) {
+      return {
+        complexId: complex.id,
+        complexName: complex.name,
+        totalEligibleVoters,
+        totalCastVotes: 0,
+        winnerId: null,
+        winnerName: null,
+        isSoleBid: true,
+        isRebid: true,
+        negotiatedContract: false,
+        bidders: [],
+        finalProfitMargin: complex.baseExpectedProfitMargin,
+        contractPrice: complex.expectedCost,
+        assemblySummary: `${compName}가 단독 응찰하였으나, 정비사업 계약업무 처리기준(경쟁입찰 성립 요건 2개사 미달)에 따라 1회차 자동 유찰되었습니다. 2회차 재입찰이 공고됩니다.`,
+        keyVoteFactor: '1회차 단독 응찰로 인한 자동 유찰 (경쟁 성립 요건 미달)',
+      };
+    }
+
+    // 2회차 이상 단독 응찰인 경우: 조합원 찬반 투표 실시
+    const proposal =
+      soleId === playerCompanyId && playerProposal
         ? playerProposal
         : comp
         ? generateCompetitorProposal(comp, complex)
         : null;
 
-      const evalRes = (proposal && comp)
+    const evalRes =
+      proposal && comp
         ? evaluateProposal(proposal, complex, comp)
-        : { effectiveMarginPercent: complex.baseExpectedProfitMargin, totalCost: complex.expectedCost };
+        : null;
 
+    const stance = state.supportScores[soleId];
+    const favorability = stance?.totalFavorability || 50;
+    const trust = stance?.trustScore || 70;
+    const appeal = evalRes ? evalRes.pragmatistAppeal : 50;
+    const effectiveMargin = evalRes ? evalRes.effectiveMarginPercent : complex.baseExpectedProfitMargin;
+    const finalCost = evalRes ? evalRes.totalCost : complex.expectedCost;
+
+    // 찬성률 산출: 호감도 50%, 신뢰도 30%, 제안서 매력도 20%
+    const approvalPercent = Math.min(
+      96,
+      Math.max(25, Math.round(favorability * 0.5 + trust * 0.3 + appeal * 0.2))
+    );
+
+    const yesVotes = Math.round(totalCastVotes * (approvalPercent / 100));
+    const noVotes = totalCastVotes - yesVotes;
+    const isApproved = yesVotes > totalCastVotes * 0.5;
+
+    if (isApproved) {
       return {
         complexId: complex.id,
         complexName: complex.name,
@@ -136,38 +176,52 @@ export function simulateGeneralAssemblyVote(
             companyId: soleId,
             companyName: compName,
             isPlayer: soleId === playerCompanyId,
-            totalVotes: totalCastVotes,
-            voteSharePercent: 100,
-            brandLoyalistVotes: brandVoterCount,
-            pragmatistVotes: pragmatistVoterCount,
-            floatingVotes: floatingVoterCount,
-            appealScore: 85,
-            effectiveMarginPercent: evalRes.effectiveMarginPercent,
-            contractPrice: evalRes.totalCost,
+            totalVotes: yesVotes,
+            voteSharePercent: approvalPercent,
+            brandLoyalistVotes: Math.round(brandVoterCount * (approvalPercent / 100)),
+            pragmatistVotes: Math.round(pragmatistVoterCount * (approvalPercent / 100)),
+            floatingVotes: Math.round(floatingVoterCount * (approvalPercent / 100)),
+            appealScore: approvalPercent,
+            effectiveMarginPercent: effectiveMargin,
+            contractPrice: finalCost,
           },
         ],
-        finalProfitMargin: evalRes.effectiveMarginPercent,
-        contractPrice: evalRes.totalCost,
-        assemblySummary: `${complex.name} 총회에서 ${compName} 단독 입찰에 대한 찬반 투표 결과, 찬성 압도 다수로 수의계약 우선협상대상자로 공식 확정되었습니다.`,
-        keyVoteFactor: '단독 입찰에 따른 수의계약 총회 인준',
+        finalProfitMargin: effectiveMargin,
+        contractPrice: finalCost,
+        assemblySummary: `${complex.name} 2회 유찰 후 열린 시공사 선정 총회에서 조합원 찬성률 ${approvalPercent}%(찬성 ${yesVotes}표 / 반대 ${noVotes}표)로 ${compName}과의 수의계약이 최종 인준되었습니다.`,
+        keyVoteFactor: `수의계약 조합원 총회 인준 가결 (찬성률 ${approvalPercent}%)`,
       };
     } else {
-      // 1회차 단독 응찰 -> 유찰 후 재입찰로 전환
+      // 찬성 과반 미달로 수의계약 부결!
       return {
         complexId: complex.id,
         complexName: complex.name,
         totalEligibleVoters,
-        totalCastVotes: 0,
+        totalCastVotes,
         winnerId: null,
         winnerName: null,
         isSoleBid: true,
         isRebid: true,
         negotiatedContract: false,
-        bidders: [],
+        bidders: [
+          {
+            companyId: soleId,
+            companyName: compName,
+            isPlayer: soleId === playerCompanyId,
+            totalVotes: yesVotes,
+            voteSharePercent: approvalPercent,
+            brandLoyalistVotes: Math.round(brandVoterCount * (approvalPercent / 100)),
+            pragmatistVotes: Math.round(pragmatistVoterCount * (approvalPercent / 100)),
+            floatingVotes: Math.round(floatingVoterCount * (approvalPercent / 100)),
+            appealScore: approvalPercent,
+            effectiveMarginPercent: effectiveMargin,
+            contractPrice: finalCost,
+          },
+        ],
         finalProfitMargin: complex.baseExpectedProfitMargin,
         contractPrice: complex.expectedCost,
-        assemblySummary: `${compName}가 단독 입찰하였으나, 정비사업 시공사 선정 기준(경쟁입찰 성립 요건 미충족)에 따라 자동 유찰 처리되었습니다.`,
-        keyVoteFactor: '2개사 이상 경쟁 요건 미충족으로 인한 자동 유찰',
+        assemblySummary: `${complex.name} 총회에서 ${compName} 단독 입찰안에 대한 수의계약 찬반 투표 결과, 찬성률이 ${approvalPercent}%에 그쳐 과반 미달로 부결되었습니다.`,
+        keyVoteFactor: `조합원 수의계약 안건 부결 (찬성률 ${approvalPercent}%로 과반 미달)`,
       };
     }
   }

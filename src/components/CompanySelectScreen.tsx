@@ -12,6 +12,8 @@ import {
   Dice5,
   Calendar,
   CheckCircle2,
+  Play,
+  RotateCcw,
 } from 'lucide-react';
 import { CONSTRUCTION_COMPANIES } from '../data/companies';
 import { CompanyData, PlayerTarget } from '../types/game';
@@ -28,6 +30,14 @@ import { VisitorCounter, PersonalRunBadge } from './VisitorCounter';
 import { CraftUniverseNavbar } from './CraftUniverseNavbar';
 import { DATABREW_PORTAL } from '../config/craftUniverse';
 
+export interface SavedGameSummary {
+  companyName: string;
+  currentTurn: number;
+  totalTurns: number;
+  budget: number;
+  wonCount: number;
+}
+
 interface Props {
   onStartGame: (
     companyId: string,
@@ -35,9 +45,17 @@ interface Props {
     target: PlayerTarget,
     scheduleId: ScheduleMasterplanId
   ) => void;
+  savedGameInfo?: SavedGameSummary | null;
+  onResumeGame?: () => void;
+  onClearSavedGame?: () => void;
 }
 
-export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
+export const CompanySelectScreen: React.FC<Props> = ({
+  onStartGame,
+  savedGameInfo,
+  onResumeGame,
+  onClearSavedGame,
+}) => {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('taeseong');
   const [gameMode, setGameMode] = useState<'STANDARD_18' | 'FAST_12'>('STANDARD_18');
   const [targetLevel, setTargetLevel] = useState<'SAFE' | 'CHALLENGE' | 'AGGRESSIVE' | 'RECKLESS'>('CHALLENGE');
@@ -113,6 +131,61 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
             가온 신시가지 15개 단지 수주전쟁과 조합원 표심 공략
           </p>
         </div>
+
+        {/* 저장된 게임 이어하기 배너 */}
+        {savedGameInfo && (
+          <div className="bg-gradient-to-r from-amber-950/40 via-slate-900 to-amber-950/30 border-2 border-amber-500/70 rounded-xl p-4 sm:p-5 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-lg bg-amber-500/20 border border-amber-500/50 flex items-center justify-center shrink-0">
+                <Play className="w-6 h-6 text-amber-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-pixel text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                    진행 중인 세이브 발견
+                  </span>
+                  <span className="font-pixel text-sm font-bold text-white">
+                    {savedGameInfo.companyName}
+                  </span>
+                </div>
+                <div className="text-xs text-slate-300 mt-1 font-mono flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span>
+                    진행: <strong className="text-amber-400">{savedGameInfo.currentTurn}</strong> / {savedGameInfo.totalTurns}턴
+                  </span>
+                  <span>•</span>
+                  <span>
+                    수주 성공: <strong className="text-emerald-400">{savedGameInfo.wonCount}개 단지</strong>
+                  </span>
+                  <span>•</span>
+                  <span>
+                    잔여 예산: <strong className="text-cyan-400">{formatKRW(savedGameInfo.budget)}</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {onResumeGame && (
+                <button
+                  onClick={onResumeGame}
+                  className="flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-pixel font-bold text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2"
+                >
+                  <Play className="w-4 h-4 fill-slate-950" />
+                  <span>이어하기</span>
+                </button>
+              )}
+              {onClearSavedGame && (
+                <button
+                  onClick={onClearSavedGame}
+                  className="px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-rose-950/60 hover:text-rose-400 hover:border-rose-700/60 text-slate-400 border border-slate-700 font-pixel text-xs transition-colors flex items-center gap-1.5"
+                  title="저장 데이터 삭제"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>초기화</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 1. 소속 건설사 선택 */}
         <div className="space-y-3">

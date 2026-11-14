@@ -171,6 +171,7 @@ export class GameEngine {
         complexId: complex.id,
         currentStage: complex.startTurn === 1 ? complex.stage : 'interest',
         monthsInStage: 0,
+        playerBidStatus: complex.startTurn === 1 ? 'PRE_SALES' : 'NONE',
         prFatigue: 0,
         unionActions: [],
         supportScores,
@@ -207,6 +208,7 @@ export class GameEngine {
           playerAggressionObserved: 0,
           preferredComplexTypes: [],
         },
+        hqBudgetRequestsUsed: 0,
       };
     });
 
@@ -256,6 +258,22 @@ export class GameEngine {
     return this.state;
   }
 
+  // 저장된 게임 상태 복원 (Phase 6: 이어하기 지원)
+  public setState(state: GameState): void {
+    this.state = JSON.parse(JSON.stringify(state));
+  }
+
+  public static fromSavedState(savedState: GameState): GameEngine {
+    const engine = new GameEngine(
+      savedState.playerCompanyId,
+      savedState.gameMode,
+      Date.now(),
+      savedState.playerTarget
+    );
+    engine.setState(savedState);
+    return engine;
+  }
+
   // 영업 인력(100명) 재배치
   public allocateStaff(allocations: Record<number, number>): { success: boolean; message: string } {
     let total = 0;
@@ -303,6 +321,8 @@ export class GameEngine {
     const evalResult = evaluateProposal(proposal, complex, playerCompany);
 
     bState.playerProposal = proposal;
+    bState.playerBidStatus = 'BID_CONFIRMED';
+    bState.supportScores[this.state.playerCompanyId].hasBid = true;
     bState.consortiumPartnerId = consortiumPartnerId || null;
 
     // 제안서 실비 소멸 적용 (소멸비용 차감)
@@ -433,6 +453,8 @@ export class GameEngine {
     if (action.id === 'withdraw_bid') {
       mySupport.isWithdrawn = true;
       mySupport.totalFavorability = 0;
+      mySupport.hasBid = false;
+      bState.playerBidStatus = 'WITHDRAWN';
       this.state.ceoTrust = Math.max(10, this.state.ceoTrust - 6);
       this.state.cfoTrust = Math.min(100, this.state.cfoTrust + 6);
       this.state.turnLogs.push({
@@ -445,6 +467,9 @@ export class GameEngine {
 
     if (action.id === 'enter_bid') {
       mySupport.hasBid = true;
+      bState.playerBidStatus = 'BID_CONFIRMED';
+    } else if (bState.playerBidStatus === 'NONE' || bState.playerBidStatus === 'PRE_SALES') {
+      bState.playerBidStatus = 'BID_REVIEW';
     }
 
     // 호감도 및 마진 변동 적용
@@ -540,6 +565,22 @@ export class GameEngine {
 
     // 2. 경쟁사 AI 의사결정 및 관찰 가능 행동 생성
     CONSTRUCTION_COMPANIES.filter((c) => c.id !== this.state.playerCompanyId).forEach((company) => {
+      const compState = this.state.competitorStates[company.id];
+      if (!compState) return;
+
+      // 긴급 본사 추가예산 심사 (Phase 1-1: 자원 제약 및 본사 승인)
+      if (compState.budget < 25 && compState.hqBudgetRequestsUsed < 2) {
+        if (company.attributes.funds >= 75 && compState.reputation >= 65) {
+          compState.budget += 60;
+          compState.hqBudgetRequestsUsed += 1;
+          this.state.turnLogs.push({
+            turn: this.state.currentTurn,
+            message: `[본사 추가예산 승인] ${company.name} 본사가 가온 신시가지 수주 총력전을 위해 긴급 영업예산 60억원을 추가 배정했습니다.`,
+            type: 'INFO',
+          });
+        }
+      }
+
       const aiDecisions = this.aiEngine.evaluateCompanyTurn(
         company,
         this.state,
@@ -552,14 +593,41 @@ export class GameEngine {
         const myScore = bState.supportScores[company.id];
         if (!myScore) return;
 
+        // 실제 영업예산 차감 (Phase 1-1: 플레이어와 동일한 실제 예산 제약)
+        if (dec.costSpent > 0) {
+          compState.budget = Math.max(0, compState.budget - dec.costSpent);
+        }
+
         if (dec.decisionType === 'WITHDRAW') {
           myScore.isWithdrawn = true;
+          myScore.hasBid = false;
           myScore.totalFavorability = 0;
           this.state.turnLogs.push({
             turn: this.state.currentTurn,
-            message: `[경쟁사 철수] ${company.name}이(가) ${this.allComplexes.find((c) => c.id === dec.complexId)?.name}에서 전략적으로 발을 뺐습니다.`,
+            message: `[경쟁사 철수] ${company.name}이(가) ${this.allComplexes.find((c) => c.id === dec.complexId)?.name}에서 기대효용 부족으로 전략적 철수를 선언했습니다.`,
             type: 'INFO',
           });
+
+          // Phase 3-1: 연쇄 반응 (Cascade Reaction) - 철수한 인력과 영업비를 자사 다른 목표 단지로 즉시 전환
+          const otherTargetId = company.targetComplexIds.find(
+            (tId) =>
+              tId !== dec.complexId &&
+              !this.state.complexStates[tId]?.winnerId &&
+              !this.state.complexStates[tId]?.supportScores[company.id]?.isWithdrawn
+          );
+          if (otherTargetId) {
+            const otherStance = this.state.complexStates[otherTargetId]?.supportScores[company.id];
+            if (otherStance) {
+              otherStance.totalFavorability = Math.min(95, otherStance.totalFavorability + 8);
+              otherStance.hiddenBidIntent = Math.min(95, otherStance.hiddenBidIntent + 12);
+              const targetName = this.allComplexes.find((c) => c.id === otherTargetId)?.name;
+              this.state.turnLogs.push({
+                turn: this.state.currentTurn,
+                message: `[전력 재배치] ${company.name}이(가) 철수 인력을 ${targetName}로 급파하여 집중 공세에 돌입했습니다!`,
+                type: 'WARNING',
+              });
+            }
+          }
         } else if (dec.supportBoost) {
           myScore.totalFavorability = Math.min(98, myScore.totalFavorability + dec.supportBoost);
           if (dec.marginAdjustment) {
@@ -674,8 +742,12 @@ export class GameEngine {
     this.state.lastTurnEvents = newEvents;
     this.state.eventsHistory.push(...newEvents);
 
-    // 5. 신규 업계 소문 생성
-    this.state.rumors = this.rumorEngine.generateTurnRumors(this.state.currentTurn + 1);
+    // 5. 신규 업계 소문 생성 (실제 내부 상태 및 사건 기반)
+    this.state.rumors = this.rumorEngine.generateTurnRumors(
+      this.state.currentTurn + 1,
+      this.state,
+      this.allComplexes
+    );
 
     // 6. 가상 커뮤니티 (가온 신시가지 소통방) 피드 갱신
     const newPosts = generateCommunityPosts(
@@ -754,11 +826,11 @@ export class GameEngine {
     bState: ComplexBiddingState,
     contractsSigned: Array<{ complexName: string; winnerName: string; price: number }>
   ): void {
+    // 플레이어 참여 여부: 반드시 명시적 입찰 확정('BID_CONFIRMED') 및 제안서 제출 완료 시에만 참가!
+    // Phase 1-2: 호감도가 95라도 입찰을 확정하지 않았거나 포기('WITHDRAWN')했으면 절대 참여하지 않음!
     const playerParticipates =
       !bState.supportScores[this.state.playerCompanyId]?.isWithdrawn &&
-      (bState.playerProposal !== undefined ||
-        bState.supportScores[this.state.playerCompanyId]?.hasBid ||
-        bState.supportScores[this.state.playerCompanyId]?.totalFavorability >= 25);
+      (bState.playerBidStatus === 'BID_CONFIRMED' || bState.playerProposal !== undefined);
 
     // 건설사별 기수주 단지 수 및 잔여 캐파 집계 (반독점 밸런스 평가용)
     const builderWonCounts: Record<string, number> = {};
@@ -854,6 +926,7 @@ export class GameEngine {
     };
 
     if (voteResult.winnerId === this.state.playerCompanyId) {
+      bState.playerBidStatus = 'WON';
       this.state.usedCapa += complex.expectedCost;
       this.state.ceoTrust = Math.min(100, this.state.ceoTrust + 15);
       if (voteResult.finalProfitMargin < 2.0) {
@@ -867,18 +940,30 @@ export class GameEngine {
         message: `[수주 승리!] ${voteResult.assemblySummary}`,
         type: 'SUCCESS',
       });
-    } else if (voteResult.winnerId) {
-      const comp = this.state.competitorStates[voteResult.winnerId];
-      if (comp) {
-        comp.usedCapa += complex.expectedCost;
-        comp.wonComplexIds.push(complex.id);
-        comp.totalWonVolume += complex.expectedCost;
+    } else {
+      if (playerParticipates) {
+        bState.playerBidStatus = 'LOST';
+        this.state.ceoTrust = Math.max(10, this.state.ceoTrust - 8);
+        this.state.turnLogs.push({
+          turn: this.state.currentTurn,
+          message: `[수주 실패] ${complex.name} 총회 투표에서 고배를 마셨습니다. 투입된 영업비와 인력 노력이 무산되었습니다. (CEO 신뢰도 -8)`,
+          type: 'WARNING',
+        });
       }
-      this.state.turnLogs.push({
-        turn: this.state.currentTurn,
-        message: `[수주 결과] ${complex.name}의 시공권은 ${winnerName}에게 돌아갔습니다. (${voteResult.keyVoteFactor})`,
-        type: 'INFO',
-      });
+
+      if (voteResult.winnerId) {
+        const comp = this.state.competitorStates[voteResult.winnerId];
+        if (comp) {
+          comp.usedCapa += complex.expectedCost;
+          comp.wonComplexIds.push(complex.id);
+          comp.totalWonVolume += complex.expectedCost;
+        }
+        this.state.turnLogs.push({
+          turn: this.state.currentTurn,
+          message: `[수주 결과] ${complex.name}의 시공권은 ${winnerName}에게 돌아갔습니다. (${voteResult.keyVoteFactor})`,
+          type: 'INFO',
+        });
+      }
     }
 
     contractsSigned.push({

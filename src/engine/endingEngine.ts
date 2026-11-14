@@ -1,6 +1,7 @@
 import { GameEnding, GameState, ComplexData } from '../types/game';
 import { GAME_ENDINGS } from '../data/endings';
-import { calculateProjectProfit } from './profitEngine';
+import { calculateProjectProfitability } from './profitEngine';
+import { CONSTRUCTION_COMPANIES } from '../data/companies';
 
 export interface CompanyPerformanceSummary {
   companyId: string;
@@ -50,13 +51,16 @@ export class EndingEngine {
 
       if (st.winnerId === gameState.playerCompanyId) {
         playerWonComplexes.push(cId);
-        playerWonVolume += complex.expectedCost;
-        const profit = calculateProjectProfit(
+        playerWonVolume += st.contractPrice || complex.expectedCost;
+        const playerCompany = CONSTRUCTION_COMPANIES.find((c) => c.id === gameState.playerCompanyId)!;
+        const profit = calculateProjectProfitability({
           complex,
-          st.supportScores[gameState.playerCompanyId]?.costOfferedMarginDelta || 0,
-          0
-        );
-        playerWonProfit += profit.riskAdjustedProfit;
+          company: playerCompany,
+          proposal: st.playerProposal,
+          contractPriceOverride: st.contractPrice,
+          marginPercentOverride: st.finalProfitMargin,
+        });
+        playerWonProfit += profit.expectedOperatingProfit;
 
         if (st.isSoleBid || st.negotiatedContract) {
           soleBidWonCount++;
@@ -68,8 +72,8 @@ export class EndingEngine {
       }
     });
 
-    // 플레이어의 실제 사용된 영업비용 차감
-    playerWonProfit = Math.max(0, playerWonProfit - gameState.totalSalesCostSpent);
+    // 플레이어의 실제 사용된 영업비용 차감 (손실 시 음수 그대로 보존)
+    playerWonProfit = Math.round(playerWonProfit - gameState.totalSalesCostSpent);
 
     companySummaries[gameState.playerCompanyId] = {
       companyId: gameState.playerCompanyId,
@@ -89,15 +93,27 @@ export class EndingEngine {
     Object.entries(gameState.competitorStates).forEach(([compId, cState]) => {
       let compVolume = 0;
       let compProfit = 0;
+      const comp = CONSTRUCTION_COMPANIES.find((c) => c.id === compId);
 
       cState.wonComplexIds.forEach((cId) => {
         const complex = complexMap.get(cId);
-        if (complex) {
-          compVolume += complex.expectedCost;
-          const profit = calculateProjectProfit(complex, 0, 0);
-          compProfit += profit.riskAdjustedProfit;
+        if (complex && comp) {
+          const bSt = gameState.complexStates[cId];
+          const cPrice = bSt?.contractPrice || complex.expectedCost;
+          compVolume += cPrice;
+          const profit = calculateProjectProfitability({
+            complex,
+            company: comp,
+            contractPriceOverride: cPrice,
+            marginPercentOverride: bSt?.finalProfitMargin,
+          });
+          compProfit += profit.expectedOperatingProfit;
         }
       });
+
+      // 경쟁사 투입 영업비 차감 (초기예산 - 잔여예산)
+      const spentBudget = Math.max(0, (comp?.startingBudget || 300) - cState.budget);
+      compProfit = Math.round(compProfit - spentBudget);
 
       companySummaries[compId] = {
         companyId: compId,

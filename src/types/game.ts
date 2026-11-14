@@ -206,10 +206,24 @@ export interface CompetitorComplexStance {
   trustScore: number;
 }
 
+// 플레이어의 단지별 명시적 입찰 상태 (호감도와 분리된 실제 정비사업 절차 단계)
+export type PlayerBidStatus =
+  | 'NONE'          // 1. 관심 없음 (사전 단계)
+  | 'PRE_SALES'     // 2. 사전 영업 (홍보 진행 중)
+  | 'BID_REVIEW'    // 3. 입찰 검토 (현장설명회 참석 및 사업성 분석)
+  | 'BID_PREPARING' // 4. 입찰 준비 (설계 및 제안서 작성)
+  | 'BID_CONFIRMED' // 5. 입찰 참여 확정 (입찰보증금 납부 & 제안서 제출 완료)
+  | 'WITHDRAWN'     // 6. 입찰 포기 (전략적 철수)
+  | 'WON'           // 7. 수주 성공
+  | 'LOST';         // 8. 수주 실패
+
 export interface ComplexBiddingState {
   complexId: number;
   currentStage: ComplexStage;
   monthsInStage: number;
+
+  // 플레이어의 명시적 입찰 확정 상태
+  playerBidStatus: PlayerBidStatus;
 
   // 홍보 피로도 (0~100): 과도한 홍보 시 주민 반발 발생
   prFatigue: number;
@@ -360,6 +374,7 @@ export interface GameState {
       playerAggressionObserved: number;
       preferredComplexTypes: string[];
     };
+    hqBudgetRequestsUsed: number;
   }>;
 
   // 가상 커뮤니티 게시글 피드

@@ -65,7 +65,7 @@ export class AICompetitorEngine {
       // 선호도가 낮으면 관망
       if (preference < 25) continue;
 
-      // 2. 현재 내 지지율 vs 1위 후보 지지율 비교
+      // 2. 현재 내 지지율 vs 1위 후보 지지율 비교 및 기대효용(Expected Utility) 산출
       const allScores = Object.entries(bState.supportScores)
         .filter(([, s]) => !s.isWithdrawn)
         .map(([id, s]) => ({ id, score: s.totalFavorability }));
@@ -76,34 +76,74 @@ export class AICompetitorEngine {
 
       const myScore = mySupportData?.totalFavorability || 30;
 
-      // 3. 압도적 열세 시 전략적 철수 판단 (무경쟁 수주 형성 원리)
+      // 수주 확률 및 기대효용(EU) 계산
+      const winProb = Math.max(0.05, Math.min(0.95, myScore / (myScore + highestOther + 1)));
+      const expectedProfit = complex.expectedCost * (complex.baseExpectedProfitMargin / 100);
+      const expectedUtility = winProb * expectedProfit;
+
+      // 3. 기대효용 극저 또는 압도적 열세 시 전략적 철수 판단
       if (
         (bState.currentStage === 'bidding_prep' || bState.currentStage === 'bidding') &&
-        highestOther >= 78 &&
-        myScore <= 35 &&
-        complex.expectedCost > remainingCapa * 0.7
+        (winProb < 0.22 || (highestOther >= 72 && myScore <= 38)) &&
+        complex.expectedCost > remainingCapa * 0.65
       ) {
-        // 승산이 없고 캐파 부담이 크면 철수 결정
+        // 승산이 없고 캐파 부담이 크면 과감히 철수 결정
         decisions.push({
           companyId: company.id,
           complexId: complex.id,
           decisionType: 'WITHDRAW',
-          reason: `${highestOther}%의 압도적 1위에 맞서 불필요한 예산 낭비를 막고 전략적 철수 결정`,
+          reason: `예상 승률(${(winProb * 100).toFixed(0)}%) 저조 및 기대효용 부족으로 인한 전략적 철수 (예산 절감 및 타 단지 전환)`,
           costSpent: 0,
         });
         continue;
       }
 
-      // 4. 플레이어 기억에 따른 카운터 전략 반영
+      // 예산 소진 체크: 가용 예산이 5억원 미만이면 유료 영업 중단
+      if (compState.budget < 5) {
+        decisions.push({
+          companyId: company.id,
+          complexId: complex.id,
+          decisionType: 'OBSERVE',
+          reason: '가용 영업예산 고갈로 인한 유료 홍보 일시 중단 및 현장 관망',
+          costSpent: 0,
+        });
+        continue;
+      }
+
+      // 4. 공식 입찰 확정(hasBid) 의사결정 (본입찰 및 총회 단계)
+      if (
+        (bState.currentStage === 'bidding_prep' || bState.currentStage === 'bidding') &&
+        !mySupportData.hasBid &&
+        !mySupportData.isWithdrawn
+      ) {
+        const prepCost = complex.biddingRules?.proposalPrepCost || 12;
+        if (winProb >= 0.25 && compState.budget >= prepCost && remainingCapa >= complex.expectedCost) {
+          mySupportData.hasBid = true;
+          decisions.push({
+            companyId: company.id,
+            complexId: complex.id,
+            decisionType: 'BID_PUSH',
+            reason: `기대효용(${Math.round(expectedUtility)}억원) 충족에 따른 공식 입찰 제안서 제출 및 확정`,
+            supportBoost: this.rng.range(6, 12),
+            costSpent: prepCost,
+          });
+          continue;
+        }
+      }
+
+      // 5. 플레이어 기억에 따른 카운터 전략 반영
       const playerMemory = compState.strategyMemory;
       const playerDumpsPrice = playerMemory.playerPriceCutObserved >= 2;
 
-      // 5. 행동 결정 (성향 및 승률 고려)
+      // 6. 행동 결정 (성향 및 승률 고려)
       if (bState.currentStage === 'bidding') {
         // 본 입찰 단계
         if (myScore < highestOther && myScore >= 45) {
           // 접전 중 역전 시도
-          if (company.personality === 'finance_fighter' || (playerDumpsPrice && company.attributes.finance > 85)) {
+          if (
+            (company.personality === 'finance_fighter' || (playerDumpsPrice && company.attributes.finance > 85)) &&
+            compState.budget >= 12
+          ) {
             decisions.push({
               companyId: company.id,
               complexId: complex.id,
@@ -114,7 +154,6 @@ export class AICompetitorEngine {
               costSpent: 12,
             });
           } else if (company.personality === 'profit_conservative' && complex.riskLevel === 'HIGH') {
-            // 보수형은 고위험 단지에서 무리하지 않고 관망
             decisions.push({
               companyId: company.id,
               complexId: complex.id,
@@ -122,8 +161,7 @@ export class AICompetitorEngine {
               reason: '사업 위험도가 높아 추가 출혈을 자제하고 기본 조건 유지',
               costSpent: 0,
             });
-          } else if (company.attributes.costComp >= 80 && myScore <= highestOther - 8) {
-            // 원가 우위 건설사의 기습 공사비 인하
+          } else if (company.attributes.costComp >= 80 && myScore <= highestOther - 8 && compState.budget >= 10) {
             decisions.push({
               companyId: company.id,
               complexId: complex.id,
@@ -133,7 +171,7 @@ export class AICompetitorEngine {
               marginAdjustment: -0.8,
               costSpent: 10,
             });
-          } else {
+          } else if (compState.budget >= 8) {
             decisions.push({
               companyId: company.id,
               complexId: complex.id,
@@ -146,7 +184,7 @@ export class AICompetitorEngine {
         }
       } else {
         // 사전 영업 / 입찰 준비 단계
-        if (preference >= 55 && compState.budget >= 15) {
+        if (preference >= 55 && compState.budget >= 6) {
           decisions.push({
             companyId: company.id,
             complexId: complex.id,

@@ -4,6 +4,7 @@ import { GameState, ComplexData, PlayerTarget, BidProposal } from './types/game'
 import { CONSTRUCTION_COMPANIES } from './data/companies';
 import { ScheduleMasterplanId } from './data/schedules';
 import { CraftUniverseNavbar } from './components/CraftUniverseNavbar';
+import { calculateProjectProfitability } from './engine/profitEngine';
 import { TopHUD } from './components/TopHUD';
 import { CityMapCanvas } from './components/3d/CityMapCanvas';
 import { TacticalMap2D } from './components/TacticalMap2D';
@@ -55,9 +56,71 @@ export const App: React.FC = () => {
   // Action status message
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const [savedInfo, setSavedInfo] = useState<{
+    companyName: string;
+    currentTurn: number;
+    totalTurns: number;
+    budget: number;
+    wonCount: number;
+  } | null>(null);
+
+  const refreshSavedInfo = () => {
+    const saved = loadGameFromStorage();
+    if (saved) {
+      const comp = CONSTRUCTION_COMPANIES.find((c) => c.id === saved.playerCompanyId);
+      const wonCount = Object.values(saved.complexStates).filter(
+        (cs) => cs.winnerId === saved.playerCompanyId
+      ).length;
+      setSavedInfo({
+        companyName: comp?.name || saved.playerCompanyId,
+        currentTurn: saved.currentTurn,
+        totalTurns: saved.totalTurns,
+        budget: saved.budget,
+        wonCount,
+      });
+    } else {
+      setSavedInfo(null);
+    }
+  };
+
+  useEffect(() => {
+    refreshSavedInfo();
+  }, [phase]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // 저장된 게임 불러오기
+  const handleResumeGame = () => {
+    const saved = loadGameFromStorage();
+    if (!saved) return;
+    try {
+      const resumedEngine = GameEngine.fromSavedState(saved);
+      setEngine(resumedEngine);
+      const st = resumedEngine.getState();
+      setGameState({ ...st });
+      if (st.isGameOver) {
+        setPhase('ENDING');
+      } else {
+        setPhase('GAME');
+      }
+      showToast('이전 저장된 게임을 불러왔습니다.');
+    } catch (e) {
+      console.error('Failed to restore game:', e);
+      clearSavedGame();
+      refreshSavedInfo();
+      showToast('저장 데이터 복원에 실패하여 초기화했습니다.');
+    }
+  };
+
+  const handleClearSavedGame = () => {
+    if (window.confirm('저장된 게임 데이터를 삭제하시겠습니까?')) {
+      clearSavedGame();
+      refreshSavedInfo();
+      showToast('저장 데이터가 삭제되었습니다.');
+    }
   };
 
   // 게임 시작 (회사, 모드, 목표, 시공사 선정 일정 마스터플랜 설정)
@@ -189,6 +252,7 @@ export const App: React.FC = () => {
       setPhase('SELECT');
       setSelectedComplexId(null);
       setProposalComplex(null);
+      refreshSavedInfo();
     }
   };
 
@@ -210,15 +274,22 @@ export const App: React.FC = () => {
       const cId = Number(cIdStr);
       const comp = engine.allComplexes.find((c) => c.id === cId);
       if (comp && st.winnerId === gameState.playerCompanyId) {
-        volume += comp.expectedCost;
-        const margin = comp.baseExpectedProfitMargin + (st.supportScores[gameState.playerCompanyId]?.costOfferedMarginDelta || 0);
-        profit += Math.round(comp.expectedCost * (margin / 100));
+        const cPrice = st.contractPrice || comp.expectedCost;
+        volume += cPrice;
+        const proj = calculateProjectProfitability({
+          complex: comp,
+          company: playerCompany,
+          proposal: st.playerProposal,
+          contractPriceOverride: cPrice,
+          marginPercentOverride: st.finalProfitMargin,
+        });
+        profit += proj.expectedOperatingProfit;
       }
     });
 
-    profit = Math.max(0, profit - gameState.totalSalesCostSpent);
+    profit = Math.round(profit - gameState.totalSalesCostSpent);
     return { totalWonVolume: volume, totalExpectedProfit: profit };
-  }, [gameState, engine]);
+  }, [gameState, engine, playerCompany]);
 
   const selectedComplex = useMemo(() => {
     if (!selectedComplexId || !engine) return null;
@@ -234,7 +305,12 @@ export const App: React.FC = () => {
           onOpenSimulator={() => setIsSimulatorOpen(true)}
           onResetGame={handleResetGame}
         />
-        <CompanySelectScreen onStartGame={handleStartGame} />
+        <CompanySelectScreen
+          onStartGame={handleStartGame}
+          savedGameInfo={savedInfo}
+          onResumeGame={handleResumeGame}
+          onClearSavedGame={handleClearSavedGame}
+        />
         {isDataLabOpen && <DataLabModal onClose={() => setIsDataLabOpen(false)} />}
         {isSimulatorOpen && <BalanceSimulatorModal onClose={() => setIsSimulatorOpen(false)} />}
       </>
