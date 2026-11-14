@@ -1,5 +1,5 @@
 {
-  "verifiedAt": "2026-11-14T07:05:44.249Z",
+  "verifiedAt": "2026-11-14T13:45:27.161Z",
   "totalRuns": 3000,
   "seed": 20261114,
   "deadlockRate": 0,
@@ -7,112 +7,112 @@
   "strategies": {
     "LANDMARK_FOCUS": {
       "runs": 300,
-      "targetAchievementCount": 153,
-      "totalVolume": 12742300,
-      "totalProfit": 491445,
-      "totalWonCount": 446,
+      "targetAchievementCount": 152,
+      "totalVolume": 13172800,
+      "totalProfit": 500055,
+      "totalWonCount": 455,
       "gradeDist": {
-        "S": 124,
-        "A": 18,
-        "B": 158,
+        "S": 119,
+        "A": 27,
+        "B": 154,
         "C": 0,
         "D": 0
       }
     },
     "SMALL_MEDIUM_QUANTITY": {
       "runs": 300,
-      "targetAchievementCount": 63,
-      "totalVolume": 6611200,
-      "totalProfit": 296769,
-      "totalWonCount": 342,
+      "targetAchievementCount": 53,
+      "totalVolume": 6068800,
+      "totalProfit": 263508,
+      "totalWonCount": 328,
       "gradeDist": {
-        "S": 29,
-        "A": 29,
-        "B": 204,
+        "S": 11,
+        "A": 37,
+        "B": 218,
         "C": 0,
-        "D": 38
+        "D": 34
       }
     },
     "HIGH_MARGIN_PROFIT": {
       "runs": 300,
-      "targetAchievementCount": 56,
-      "totalVolume": 6797100,
-      "totalProfit": 295805,
-      "totalWonCount": 349,
+      "targetAchievementCount": 46,
+      "totalVolume": 6554800,
+      "totalProfit": 268629,
+      "totalWonCount": 338,
       "gradeDist": {
-        "S": 25,
-        "A": 25,
-        "B": 205,
+        "S": 20,
+        "A": 21,
+        "B": 208,
         "C": 0,
-        "D": 45
+        "D": 51
       }
     },
     "BRAND_LOYALTY": {
       "runs": 300,
-      "targetAchievementCount": 251,
-      "totalVolume": 13763300,
-      "totalProfit": 586337,
-      "totalWonCount": 635,
+      "targetAchievementCount": 254,
+      "totalVolume": 13991900,
+      "totalProfit": 574522,
+      "totalWonCount": 652,
       "gradeDist": {
-        "S": 87,
-        "A": 139,
-        "B": 74,
+        "S": 90,
+        "A": 128,
+        "B": 82,
         "C": 0,
         "D": 0
       }
     },
     "DUMPING_PRICE_WAR": {
       "runs": 300,
-      "targetAchievementCount": 287,
-      "totalVolume": 15406400,
-      "totalProfit": 502926,
-      "totalWonCount": 826,
+      "targetAchievementCount": 285,
+      "totalVolume": 15311800,
+      "totalProfit": 491838,
+      "totalWonCount": 824,
       "gradeDist": {
-        "S": 32,
-        "A": 169,
-        "B": 99,
+        "S": 28,
+        "A": 162,
+        "B": 110,
         "C": 0,
         "D": 0
       }
     },
     "FINANCE_SPECIALIST": {
       "runs": 300,
-      "targetAchievementCount": 264,
-      "totalVolume": 14822800,
-      "totalProfit": 743073,
-      "totalWonCount": 789,
+      "targetAchievementCount": 274,
+      "totalVolume": 15155500,
+      "totalProfit": 747336,
+      "totalWonCount": 804,
       "gradeDist": {
-        "S": 181,
-        "A": 83,
-        "B": 36,
+        "S": 187,
+        "A": 87,
+        "B": 26,
         "C": 0,
         "D": 0
       }
     },
     "INTEL_NICHE_SNIPER": {
       "runs": 300,
-      "targetAchievementCount": 215,
-      "totalVolume": 12911500,
-      "totalProfit": 498926,
-      "totalWonCount": 558,
+      "targetAchievementCount": 213,
+      "totalVolume": 12768300,
+      "totalProfit": 466543,
+      "totalWonCount": 554,
       "gradeDist": {
-        "S": 56,
-        "A": 132,
-        "B": 112,
+        "S": 43,
+        "A": 111,
+        "B": 146,
         "C": 0,
         "D": 0
       }
     },
     "UNCONTESTED_NEGOTIATOR": {
       "runs": 300,
-      "targetAchievementCount": 230,
-      "totalVolume": 12721200,
-      "totalProfit": 485951,
-      "totalWonCount": 557,
+      "targetAchievementCount": 223,
+      "totalVolume": 12674000,
+      "totalProfit": 461612,
+      "totalWonCount": 560,
       "gradeDist": {
-        "S": 47,
-        "A": 133,
-        "B": 120,
+        "S": 42,
+        "A": 118,
+        "B": 140,
         "C": 0,
         "D": 0
       }
@@ -120,27 +120,27 @@
     "BALANCED_PORTFOLIO": {
       "runs": 300,
       "targetAchievementCount": 213,
-      "totalVolume": 12939400,
-      "totalProfit": 498199,
-      "totalWonCount": 563,
+      "totalVolume": 12881000,
+      "totalProfit": 472167,
+      "totalWonCount": 564,
       "gradeDist": {
-        "S": 56,
-        "A": 121,
-        "B": 123,
+        "S": 43,
+        "A": 109,
+        "B": 148,
         "C": 0,
         "D": 0
       }
     },
     "RANDOM_EXPLORER": {
       "runs": 300,
-      "targetAchievementCount": 224,
-      "totalVolume": 12982700,
-      "totalProfit": 498143,
-      "totalWonCount": 569,
+      "targetAchievementCount": 228,
+      "totalVolume": 12604000,
+      "totalProfit": 450811,
+      "totalWonCount": 552,
       "gradeDist": {
-        "S": 54,
-        "A": 138,
-        "B": 108,
+        "S": 31,
+        "A": 115,
+        "B": 154,
         "C": 0,
         "D": 0
       }
@@ -150,88 +150,88 @@
     {
       "id": "taeseong",
       "name": "태성건설",
-      "volWinRate": 22.5,
-      "profitWinRate": 20.3,
-      "avgVolume": 5.38,
-      "avgProfit": 2374,
+      "volWinRate": 20.5,
+      "profitWinRate": 19.8,
+      "avgVolume": 5.33,
+      "avgProfit": 2378,
       "avgCount": 2.1
     },
     {
       "id": "hangang",
       "name": "한강건설",
-      "volWinRate": 29,
-      "profitWinRate": 29.5,
-      "avgVolume": 5.34,
-      "avgProfit": 2458,
+      "volWinRate": 29.5,
+      "profitWinRate": 29.6,
+      "avgVolume": 5.38,
+      "avgProfit": 2480,
       "avgCount": 2.3
     },
     {
       "id": "daeryuk",
       "name": "대륙건설",
-      "volWinRate": 15.1,
-      "profitWinRate": 15.3,
-      "avgVolume": 4.76,
-      "avgProfit": 2248,
+      "volWinRate": 14.4,
+      "profitWinRate": 14.4,
+      "avgVolume": 4.78,
+      "avgProfit": 2258,
       "avgCount": 2
     },
     {
       "id": "mirae",
       "name": "미래건설",
-      "volWinRate": 10.5,
-      "profitWinRate": 9.3,
-      "avgVolume": 4.6,
-      "avgProfit": 2103,
+      "volWinRate": 10.7,
+      "profitWinRate": 8.8,
+      "avgVolume": 4.56,
+      "avgProfit": 2085,
       "avgCount": 1.9
     },
     {
       "id": "jungwoo",
       "name": "정우건설",
-      "volWinRate": 6.1,
-      "profitWinRate": 7.9,
+      "volWinRate": 7.7,
+      "profitWinRate": 8.6,
       "avgVolume": 4.11,
-      "avgProfit": 2059,
+      "avgProfit": 2051,
       "avgCount": 2.1
     },
     {
       "id": "sewon",
       "name": "세원건설",
-      "volWinRate": 9.1,
-      "profitWinRate": 12.1,
+      "volWinRate": 8.3,
+      "profitWinRate": 11.5,
       "avgVolume": 4.52,
-      "avgProfit": 2182,
+      "avgProfit": 2172,
       "avgCount": 2
     },
     {
       "id": "dongbang",
       "name": "동방건설",
-      "volWinRate": 4.9,
-      "profitWinRate": 3.4,
-      "avgVolume": 3.01,
-      "avgProfit": 1427,
+      "volWinRate": 5.1,
+      "profitWinRate": 4.3,
+      "avgVolume": 3.03,
+      "avgProfit": 1430,
       "avgCount": 1.3
     },
     {
       "id": "shinhwa",
       "name": "신화건설",
-      "volWinRate": 2.8,
-      "profitWinRate": 2.3,
-      "avgVolume": 2.56,
-      "avgProfit": 1390,
+      "volWinRate": 3.8,
+      "profitWinRate": 3,
+      "avgVolume": 2.57,
+      "avgProfit": 1388,
       "avgCount": 1.3
     }
   ],
   "endingDistribution": [
     {
       "name": "올해의 수주왕",
-      "rate": 23
+      "rate": 20.5
     },
     {
       "name": "만년 영업본부장",
-      "rate": 41.3
+      "rate": 46.2
     },
     {
       "name": "알짜배기 수주왕",
-      "rate": 32.9
+      "rate": 30.5
     },
     {
       "name": "구조조정 대상",

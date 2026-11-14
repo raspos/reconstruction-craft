@@ -85,7 +85,7 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     expectedCost: 22400, // 2조 2400억원
     baseExpectedProfitMargin: 4.2,
     riskLevel: 'HIGH',
-    startTurn: 6,
+    startTurn: 7,
     stage: 'interest',
     tagline: '내부 이견으로 추진 속도가 느린 단지',
     description: '종상향 조건과 공공기여 비율을 둘러싸고 조합 내부의 갑론을박이 치열합니다. 사업 지연 위험이 높지만 진입 장벽이 있어 틈새 공략이 가능합니다.',
@@ -157,7 +157,7 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     expectedCost: 26800, // 2조 6800억원
     baseExpectedProfitMargin: 4.0,
     riskLevel: 'MID',
-    startTurn: 4,
+    startTurn: 6,
     stage: 'interest',
     tagline: '하이엔드 브랜드를 갈망하는 최고급 선호 단지',
     description: '지역 내 최고 수준의 소득층이 거주하며 유명 해외 건축가 특화설계와 최고급 커뮤니티 시설을 요구합니다. 공사비보다는 명품 브랜드를 우선시합니다.',
@@ -230,7 +230,7 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     expectedCost: 31000, // 3조 1000억원
     baseExpectedProfitMargin: 4.5,
     riskLevel: 'MID',
-    startTurn: 5,
+    startTurn: 9,
     stage: 'interest',
     tagline: '도시 중심부의 입지 최강 핵심 요충지',
     description: '중심 상권과 지하철역을 품은 가온 신시가지의 심장. 상징성과 홍보 효과가 막대해 모든 대형 건설사가 사활을 걸고 눈독을 들이는 메인 배틀그라운드입니다.',
@@ -303,7 +303,7 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     expectedCost: 27000, // 2조 7000억원
     baseExpectedProfitMargin: 3.8,
     riskLevel: 'EXTREME',
-    startTurn: 8,
+    startTurn: 11,
     stage: 'interest',
     tagline: '사업성은 거대하나 돌발 변수가 많은 화약고',
     description: '대규모 단지이지만 비대위의 활동이 왕성하고 조합 집행부와의 갈등이 심합니다. 잘못 발을 들였다가는 수주전이 장기 표류할 위험이 있습니다.',
@@ -339,7 +339,7 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     expectedCost: 27800, // 2조 7800억원
     baseExpectedProfitMargin: 4.1,
     riskLevel: 'HIGH',
-    startTurn: 7,
+    startTurn: 10,
     stage: 'interest',
     tagline: '수주 잔고를 단숨에 채울 수 있는 초대형 중량급 사업 (한강건설 우호)',
     description: '남부 축의 대표 대형 단지. 한강건설이 남부 랜드마크 조성을 목표로 사활을 걸고 대규모 사전 정지작업을 집중해 온 핵심 거점입니다.',
@@ -375,7 +375,7 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     expectedCost: 18200, // 1조 8200억원
     baseExpectedProfitMargin: 5.8,
     riskLevel: 'LOW',
-    startTurn: 4,
+    startTurn: 5,
     stage: 'interest',
     tagline: '대형사들의 시선이 쏠리지 않은 숨겨진 기회의 땅',
     description: '타 단지들에 비해 초반 언론 노출이 적어 대형사들이 방심하기 쉬운 곳입니다. 한발 빠른 물밑 영업을 펼치면 무혈입성도 노려볼 수 있습니다.',
@@ -411,7 +411,7 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     expectedCost: 19200, // 1조 9200억원
     baseExpectedProfitMargin: 5.0,
     riskLevel: 'MID',
-    startTurn: 6,
+    startTurn: 8,
     stage: 'interest',
     tagline: '이주비와 분담금 금융조건이 당락을 가르는 곳 (미래건설 우호)',
     description: '중장년층 고령 조합원 비율이 높은 단지. 미래건설이 파격적인 무이자 사업비 대여와 LTV 확약 등 금융 패키지를 앞세워 표심을 선점 중입니다.',
@@ -447,7 +447,7 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     expectedCost: 26500, // 2조 6500억원
     baseExpectedProfitMargin: 4.6,
     riskLevel: 'MID',
-    startTurn: 9,
+    startTurn: 12,
     stage: 'interest',
     tagline: '공사비 인하 경쟁이 가장 격화될 것으로 예상되는 전장 (태성건설 우호)',
     description: '조합의 원가 검증 의지가 확고한 대형 단지. 태성건설의 초우량 재무 건전성과 최상위 브랜드 파워에 대한 조합원들의 지지세가 탄탄해 타 사의 파격적 도전이 요구됩니다.',
@@ -483,7 +483,7 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     expectedCost: 36500, // 3조 6500억원 (최대 규모 매머드)
     baseExpectedProfitMargin: 3.5,
     riskLevel: 'HIGH',
-    startTurn: 10,
+    startTurn: 13,
     stage: 'interest',
     tagline: '5,000세대 매머드급 랜드마크! 모든 건설사의 최종 시험대',
     description: '신시가지 전체를 상징하는 최대어 단지. 수주 시 업계 왕좌에 등극하지만, 공사비 조달 실패나 공기 지연 발생 시 회사 전체가 휘청일 수 있습니다.',
@@ -520,7 +520,7 @@ export const RAW_COMPLEX_DATA: ComplexData[] = [
     expectedCost: 17000, // 1조 7000억원
     baseExpectedProfitMargin: 7.2,
     riskLevel: 'MID',
-    startTurn: 3,
+    startTurn: 4,
     stage: 'interest',
     tagline: '빠른 수주와 높은 마진을 노리는 신규 전략 지구 (밸런스 가상 단지)',
     description: '가온 신시가지 동측 확장지구에 위치한 전략 단지. 사업 속도가 빠르고 수익성이 좋지만 조합원들의 금융 민감도가 높아 중견-대형사의 역전 찬스 구역입니다.',

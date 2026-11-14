@@ -373,8 +373,14 @@ export const CompanySelectScreen: React.FC<Props> = ({
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 font-mono text-xs">
                 {RAW_COMPLEX_DATA.map((c) => {
-                  const sTurn = selectedPlan.startTurns[c.id] || c.startTurn;
-                  const finalTurn = getEstimatedSelectionTurn(sTurn);
+                  const isFast = gameMode === 'FAST_12';
+                  const sTurn = isFast
+                    ? (selectedPlan.startTurns12?.[c.id] || c.startTurn)
+                    : (selectedPlan.startTurns18?.[c.id] || selectedPlan.startTurns[c.id] || c.startTurn);
+                  const finalTurn = Math.min(
+                    isFast ? 12 : 18,
+                    getEstimatedSelectionTurn(sTurn, isFast)
+                  );
                   const dateStr = turnToYearMonth(finalTurn);
 
                   return (

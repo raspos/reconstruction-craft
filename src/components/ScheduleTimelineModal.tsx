@@ -144,7 +144,11 @@ export const ScheduleTimelineModal: React.FC<Props> = ({
           {filteredComplexes.map((complex) => {
             const bState = gameState.complexStates[complex.id];
             const startTurn = complex.startTurn;
-            const selectionTurn = getEstimatedSelectionTurn(startTurn);
+            const isFast = gameState.gameMode === 'FAST_12';
+            const selectionTurn = Math.min(
+              gameState.totalTurns,
+              getEstimatedSelectionTurn(startTurn, isFast)
+            );
             const isWonByPlayer = bState?.winnerId === gameState.playerCompanyId;
             const isWonByRival = bState?.winnerId && !isWonByPlayer;
             const isCurrentMonth = currentTurn >= startTurn && currentTurn <= selectionTurn;

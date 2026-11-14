@@ -32,19 +32,19 @@ const COMPANIES = [
 const COMPLEXES = [
   { id: 1, name: '가온 1단지', cost: 23500, margin: 4.8, startTurn: 1, adj: [2, 6], personality: 'conservative', voterSegments: { brand: 35, pragmatic: 40, floating: 25 }, rules: { consortiumAllowed: true } },
   { id: 2, name: '가온 2단지', cost: 22800, margin: 5.2, startTurn: 3, adj: [1, 3], personality: 'hard_bargainer', voterSegments: { brand: 20, pragmatic: 55, floating: 25 }, rules: { consortiumAllowed: true } },
-  { id: 3, name: '가온 3단지', cost: 22400, margin: 4.2, startTurn: 6, adj: [2, 4], personality: 'pragmatic_compromise', voterSegments: { brand: 30, pragmatic: 45, floating: 25 }, rules: { consortiumAllowed: false } },
+  { id: 3, name: '가온 3단지', cost: 22400, margin: 4.2, startTurn: 7, adj: [2, 4], personality: 'pragmatic_compromise', voterSegments: { brand: 30, pragmatic: 45, floating: 25 }, rules: { consortiumAllowed: false } },
   { id: 4, name: '가온 4단지', cost: 16500, margin: 6.2, startTurn: 2, adj: [3, 7], personality: 'fast_track', voterSegments: { brand: 25, pragmatic: 50, floating: 25 }, rules: { consortiumAllowed: true } },
-  { id: 5, name: '가온 5단지', cost: 26800, margin: 4.0, startTurn: 4, adj: [6, 9], personality: 'brand_centric', voterSegments: { brand: 55, pragmatic: 30, floating: 15 }, rules: { consortiumAllowed: false } },
+  { id: 5, name: '가온 5단지', cost: 26800, margin: 4.0, startTurn: 6, adj: [6, 9], personality: 'brand_centric', voterSegments: { brand: 55, pragmatic: 30, floating: 15 }, rules: { consortiumAllowed: false } },
   { id: 6, name: '가온 6단지', cost: 14800, margin: 5.5, startTurn: 1, adj: [1, 5], personality: 'fast_track', voterSegments: { brand: 35, pragmatic: 35, floating: 30 }, rules: { consortiumAllowed: true } },
-  { id: 7, name: '가온 7단지', cost: 31000, margin: 4.5, startTurn: 5, adj: [4, 8, 10], personality: 'brand_centric', voterSegments: { brand: 50, pragmatic: 30, floating: 20 }, rules: { consortiumAllowed: false } },
+  { id: 7, name: '가온 7단지', cost: 31000, margin: 4.5, startTurn: 9, adj: [4, 8, 10], personality: 'brand_centric', voterSegments: { brand: 50, pragmatic: 30, floating: 20 }, rules: { consortiumAllowed: false } },
   { id: 8, name: '가온 8단지', cost: 12800, margin: 6.8, startTurn: 2, adj: [7, 11], personality: 'pragmatic_profit', voterSegments: { brand: 15, pragmatic: 65, floating: 20 }, rules: { consortiumAllowed: true } },
-  { id: 9, name: '가온 9단지', cost: 27000, margin: 3.8, startTurn: 8, adj: [5, 10], personality: 'conservative', voterSegments: { brand: 40, pragmatic: 35, floating: 25 }, rules: { consortiumAllowed: false } },
-  { id: 10, name: '가온 10단지', cost: 27800, margin: 4.1, startTurn: 7, adj: [7, 9, 14], personality: 'competition_driver', voterSegments: { brand: 35, pragmatic: 40, floating: 25 }, rules: { consortiumAllowed: true } },
-  { id: 11, name: '가온 11단지', cost: 18200, margin: 5.8, startTurn: 4, adj: [8, 12], personality: 'internal_feud', voterSegments: { brand: 20, pragmatic: 50, floating: 30 }, rules: { consortiumAllowed: true } },
-  { id: 12, name: '가온 12단지', cost: 19200, margin: 5.0, startTurn: 6, adj: [11, 13], personality: 'pragmatic_profit', voterSegments: { brand: 20, pragmatic: 60, floating: 20 }, rules: { consortiumAllowed: true } },
-  { id: 13, name: '가온 13단지', cost: 26500, margin: 4.6, startTurn: 9, adj: [12, 14], personality: 'competition_driver', voterSegments: { brand: 30, pragmatic: 45, floating: 25 }, rules: { consortiumAllowed: true } },
-  { id: 14, name: '가온 14단지', cost: 36500, margin: 3.5, startTurn: 10, adj: [10, 13, 15], personality: 'brand_centric', voterSegments: { brand: 50, pragmatic: 35, floating: 15 }, rules: { consortiumAllowed: false } },
-  { id: 15, name: '가온 15단지', cost: 17000, margin: 7.2, startTurn: 3, adj: [14], personality: 'pragmatic_profit', voterSegments: { brand: 20, pragmatic: 55, floating: 25 }, rules: { consortiumAllowed: true } },
+  { id: 9, name: '가온 9단지', cost: 27000, margin: 3.8, startTurn: 11, adj: [5, 10], personality: 'conservative', voterSegments: { brand: 40, pragmatic: 35, floating: 25 }, rules: { consortiumAllowed: false } },
+  { id: 10, name: '가온 10단지', cost: 27800, margin: 4.1, startTurn: 10, adj: [7, 9, 14], personality: 'competition_driver', voterSegments: { brand: 35, pragmatic: 40, floating: 25 }, rules: { consortiumAllowed: true } },
+  { id: 11, name: '가온 11단지', cost: 18200, margin: 5.8, startTurn: 5, adj: [8, 12], personality: 'internal_feud', voterSegments: { brand: 20, pragmatic: 50, floating: 30 }, rules: { consortiumAllowed: true } },
+  { id: 12, name: '가온 12단지', cost: 19200, margin: 5.0, startTurn: 8, adj: [11, 13], personality: 'pragmatic_profit', voterSegments: { brand: 20, pragmatic: 60, floating: 20 }, rules: { consortiumAllowed: true } },
+  { id: 13, name: '가온 13단지', cost: 26500, margin: 4.6, startTurn: 12, adj: [12, 14], personality: 'competition_driver', voterSegments: { brand: 30, pragmatic: 45, floating: 25 }, rules: { consortiumAllowed: true } },
+  { id: 14, name: '가온 14단지', cost: 36500, margin: 3.5, startTurn: 13, adj: [10, 13, 15], personality: 'brand_centric', voterSegments: { brand: 50, pragmatic: 35, floating: 15 }, rules: { consortiumAllowed: false } },
+  { id: 15, name: '가온 15단지', cost: 17000, margin: 7.2, startTurn: 4, adj: [14], personality: 'pragmatic_profit', voterSegments: { brand: 20, pragmatic: 55, floating: 25 }, rules: { consortiumAllowed: true } },
 ];
 
 function runSingleSimulation(gameIndex, rng) {
@@ -202,9 +202,9 @@ function runSingleSimulation(gameIndex, rng) {
         }
       });
 
-      // Selection round (starts at startTurn + 3 or 4)
-      const isUrgent = turn >= 16; // 완결 보장
-      if ((turn >= c.startTurn + 3 || isUrgent) && !complexState[c.id].winnerId) {
+      // Selection round (starts at startTurn + 4 or final turn)
+      const isUrgent = turn >= 18; // 완결 보장
+      if ((turn >= c.startTurn + 4 || isUrgent) && !complexState[c.id].winnerId) {
         if (active.length === 1) {
           totalSoleBids++;
           complexState[c.id].isSoleBid = true;

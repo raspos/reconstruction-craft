@@ -82,9 +82,10 @@ export class GameEngine {
 
     this.allComplexes.forEach((complex) => {
       staffAllocation[complex.id] = 0;
-      const baseStartTurn = masterplan.startTurns[complex.id] || complex.startTurn;
-      const adjustedStartTurn =
-        gameMode === 'FAST_12' ? Math.max(1, Math.ceil(baseStartTurn / 2)) : baseStartTurn;
+      const isFast = gameMode === 'FAST_12';
+      const adjustedStartTurn = isFast
+        ? (masterplan.startTurns12?.[complex.id] || Math.max(1, Math.ceil(complex.startTurn * 0.65)))
+        : (masterplan.startTurns18?.[complex.id] || masterplan.startTurns[complex.id] || complex.startTurn);
       complex.startTurn = adjustedStartTurn;
 
       const supportScores: ComplexBiddingState['supportScores'] = {};
@@ -738,15 +739,15 @@ export class GameEngine {
             contracted: 999,
           };
 
-      // 게임 종료 임박 시 완결 보장 가속화 ("그 안에서 해결하도록")
+      // 게임 최종 회기 완결 보장 가속화 ("그 안에서 해결하도록")
       const turnsRemaining = this.state.totalTurns - this.state.currentTurn;
-      if (turnsRemaining <= 2 && bState.currentStage !== 'selection') {
-        if (bState.currentStage === 'interest' || bState.currentStage === 'pre_sales') {
-          bState.currentStage = 'bidding_prep';
-        } else if (bState.currentStage === 'bidding_prep') {
-          bState.currentStage = 'bidding';
-        } else if (bState.currentStage === 'bidding') {
+      if (turnsRemaining <= 1 && bState.currentStage !== 'selection') {
+        if (bState.currentStage === 'bidding') {
           bState.currentStage = 'selection';
+        } else if (bState.currentStage === 'bidding_prep') {
+          bState.currentStage = 'selection';
+        } else if (bState.currentStage === 'pre_sales') {
+          bState.currentStage = 'bidding_prep';
         }
         bState.monthsInStage = 0;
       }
