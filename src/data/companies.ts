@@ -56,9 +56,9 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 76,
       riskTolerance: 72,
     },
-    targetComplexIds: [7, 10, 14], // 신시가지 3대 매머드 랜드마크 정조준
+    targetComplexIds: [2, 7, 10, 14], // 신시가지 매머드 랜드마크 및 2단지 집중
     avoidedComplexIds: [6, 8, 11, 15], // 소형 실속 단지 기피
-    targetFocusDescription: '7단지·14단지와 더불어 남부 핵심 거점으로 사전 정지작업을 마친 10단지(디에이치)를 정조준합니다.',
+    targetFocusDescription: '2단지·7단지·14단지와 더불어 남부 핵심 거점으로 사전 정지작업을 마친 10단지(디에이치)를 정조준합니다.',
   },
   {
     id: 'daeryuk',
@@ -164,9 +164,9 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 80,
       riskTolerance: 70,
     },
-    targetComplexIds: [2, 12, 15], // 이주비 및 사업비 대여 등 금융조건 민감 단지
+    targetComplexIds: [4, 11, 12, 15], // 이주비 및 사업비 대여 등 금융조건 민감 단지
     avoidedComplexIds: [14], // 초대형 단지 단독 참여 기피
-    targetFocusDescription: '2단지·12단지·15단지 등 조합원 이주비와 금융 패키지를 최우선으로 평가하는 사업장에 화력을 쏟아붓습니다.',
+    targetFocusDescription: '4단지·11단지·12단지·15단지 등 조합원 이주비와 금융 패키지를 최우선으로 평가하는 사업장에 화력을 쏟아붓습니다.',
   },
   {
     id: 'dongbang',

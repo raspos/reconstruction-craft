@@ -126,7 +126,7 @@ export const CompetitorRosterModal: React.FC<Props> = ({
               .map((id) => complexMap.get(id))
               .filter((c): c is ComplexData => !!c);
 
-            // 현재 실제 활성 교전 중인 단지 (본입찰 선언 또는 높은 입찰 진정성)
+            // 현재 실제 활성 교전 중인 단지 (자사 캐파 집중 단지 중 미체결 단지)
             const activeEngagedComplexes = complexes.filter((c) => {
               const bState = gameState.complexStates[c.id];
               if (!bState || bState.winnerId || bState.currentStage === 'contracted') return false;
@@ -134,7 +134,7 @@ export const CompetitorRosterModal: React.FC<Props> = ({
               return (
                 supp &&
                 !supp.isWithdrawn &&
-                (supp.hasBid || (supp.hiddenBidIntent >= 60 && supp.totalFavorability >= 55))
+                company.targetComplexIds.includes(c.id)
               );
             });
 

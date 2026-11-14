@@ -50,9 +50,13 @@ export const ComplexDetailModal: React.FC<Props> = ({
   const mySupport = bState?.supportScores[gameState.playerCompanyId];
   const myScore = mySupport?.totalFavorability || 0;
 
-  // 경쟁사 지지율 목록
+  // 경쟁사 지지율 목록 (자사 캐파에 따라 본 사업장에 실제 참여 중인 유효 경쟁사만 선별)
   const rivalScores = Object.entries(bState?.supportScores || {})
-    .filter(([id]) => id !== gameState.playerCompanyId)
+    .filter(([id, s]) => {
+      if (id === gameState.playerCompanyId) return false;
+      const comp = CONSTRUCTION_COMPANIES.find((c) => c.id === id);
+      return comp && comp.targetComplexIds.includes(complex.id) && !s.isWithdrawn;
+    })
     .map(([id, s]) => ({ id, ...s }))
     .sort((a, b) => b.totalFavorability - a.totalFavorability);
 
@@ -294,34 +298,43 @@ export const ComplexDetailModal: React.FC<Props> = ({
             {/* Competitor Chips in this complex */}
             <div className="pt-2 border-t border-slate-900">
               <span className="text-[11px] text-slate-400 font-pixel block mb-1.5">
-                이 단지에 입찰/사전영업 중인 경쟁 건설사 현황:
+                이 단지 캐파 맞춤 집중 공략 경쟁 건설사 ({rivalScores.length}곳):
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {rivalScores.map((rival) => {
-                  const comp = CONSTRUCTION_COMPANIES.find((c) => c.id === rival.id);
-                  if (!comp) return null;
-                  return (
-                    <div
-                      key={rival.id}
-                      className={`px-2 py-1 rounded text-[11px] font-mono border flex items-center gap-1.5 ${
-                        rival.isWithdrawn
-                          ? 'bg-slate-900 text-slate-500 border-slate-800 line-through'
-                          : rival.totalFavorability >= 60
-                          ? 'bg-rose-950/60 text-rose-300 border-rose-700/80 font-bold'
-                          : 'bg-slate-900 text-slate-300 border-slate-800'
-                      }`}
-                    >
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: comp.color }}
-                      />
-                      <span>{comp.name}</span>
-                      <strong className="text-amber-400">
-                        {rival.isWithdrawn ? '철수' : `${rival.totalFavorability}%`}
-                      </strong>
-                    </div>
-                  );
-                })}
+                {rivalScores.length === 0 ? (
+                  <span className="text-[11px] text-slate-500 font-mono">
+                    ※ 현재 공식 참여 중인 경쟁사가 없습니다. (당사 단독 입찰 유리)
+                  </span>
+                ) : (
+                  rivalScores.map((rival) => {
+                    const comp = CONSTRUCTION_COMPANIES.find((c) => c.id === rival.id);
+                    if (!comp) return null;
+                    return (
+                      <div
+                        key={rival.id}
+                        className={`px-2 py-1 rounded text-[11px] font-mono border flex items-center gap-1.5 ${
+                          rival.isWithdrawn
+                            ? 'bg-slate-900 text-slate-500 border-slate-800 line-through'
+                            : rival.totalFavorability >= 60
+                            ? 'bg-rose-950/60 text-rose-300 border-rose-700/80 font-bold'
+                            : 'bg-slate-900 text-slate-300 border-slate-800'
+                        }`}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: comp.color }}
+                        />
+                        <span>{comp.name}</span>
+                        <strong className="text-amber-400">
+                          {rival.isWithdrawn ? '철수' : `${rival.totalFavorability}%`}
+                        </strong>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              <div className="text-[10px] text-slate-500 font-mono mt-1">
+                ※ 타 건설사들은 자사 시공 캐파 및 선별 수주 전략에 따라 본 사업장에 불참(타 단지 집중)했습니다.
               </div>
             </div>
 

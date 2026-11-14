@@ -36,11 +36,12 @@ export class AICompetitorEngine {
       return decisions;
     }
 
-    // 현재 입찰 가능하거나 수주전이 진행 중인 단지들 필터링
+    // 현재 입찰 가능하거나 수주전이 진행 중인 단지들 필터링 (자사 캐파 집중 단지만 선별)
     const activeComplexes = allComplexes.filter((c) => {
       const state = gameState.complexStates[c.id];
       return (
         state &&
+        company.targetComplexIds.includes(c.id) &&
         state.currentStage !== 'contracted' &&
         c.startTurn <= gameState.currentTurn &&
         !state.winnerId
@@ -207,6 +208,11 @@ export class AICompetitorEngine {
     gameState: GameState,
     remainingCapa: number
   ): number {
+    // 0. 자사 시공 캐파에 따른 지정 타깃 단지가 아니면 입찰 원천 배제
+    if (!company.targetComplexIds.includes(complex.id)) {
+      return 0;
+    }
+
     // 1. 배제/기피 단지 또는 캐파 초과 시 원천 배제
     if (company.avoidedComplexIds?.includes(complex.id)) {
       return 0; // 입찰 기피 단지

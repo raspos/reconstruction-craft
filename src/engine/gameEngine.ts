@@ -91,14 +91,12 @@ export class GameEngine {
 
       CONSTRUCTION_COMPANIES.forEach((comp) => {
         const isTarget = comp.targetComplexIds.includes(complex.id);
-        const isAvoided =
-          comp.avoidedComplexIds?.includes(complex.id) ||
-          complex.expectedCost > comp.attributes.capa * 0.55;
+        const isAvoided = !isTarget; // 캐파 집중 외 단지는 기본 사전 불참(철수)
 
-        let generalBase = 28 + this.rng.range(-4, 6);
-        let execBase = 30 + this.rng.range(-8, 8);
-        let hiddenIntent = 30 + this.rng.range(-10, 10);
-        let isWithdrawn = false;
+        let generalBase = 12 + this.rng.range(-3, 3);
+        let execBase = 10 + this.rng.range(-4, 4);
+        let hiddenIntent = 0;
+        let isWithdrawn = comp.id !== playerCompanyId && !isTarget; // AI는 캐파 타깃 외 단지 원천 불참
 
         if (isTarget) {
           generalBase = 52 + this.rng.range(-5, 8);
@@ -114,11 +112,6 @@ export class GameEngine {
               )
             )
           );
-        } else if (isAvoided) {
-          generalBase = 12 + this.rng.range(-3, 5);
-          execBase = 10 + this.rng.range(-5, 5);
-          hiddenIntent = 10;
-          isWithdrawn = comp.id !== playerCompanyId; // AI는 캐파초과/배제 단지 즉시 철수 처리
         }
 
         // 시장 선점 단지 특별 우세 반영 (6단지 DL/정우, 10단지 현대/한강, 12단지 GS/미래, 13단지 삼성/태성)
@@ -132,6 +125,7 @@ export class GameEngine {
           generalBase += 12;
           execBase += 14;
           hiddenIntent = Math.min(95, hiddenIntent + 15);
+          isWithdrawn = false;
         }
 
         const initialFavor = calculateFavorability({
@@ -142,7 +136,7 @@ export class GameEngine {
           brandPerceptionBase: comp.attributes.brand,
           costOfferedMarginDelta: 0,
           financeOfferedScore: comp.attributes.finance,
-          trustScore: isHistoricalPrecedent ? 85 : isTarget ? 78 : isAvoided ? 40 : 65,
+          trustScore: isHistoricalPrecedent ? 85 : isTarget ? 78 : 35,
         });
 
         const initialActions: ObservableCompetitorAction[] = [];
@@ -170,20 +164,18 @@ export class GameEngine {
         supportScores[comp.id] = {
           hiddenBidIntent: hiddenIntent,
           observableActions: initialActions,
-          estimatedBidChance: isAvoided
-            ? 5
-            : isTarget
-            ? Math.min(95, Math.max(60, hiddenIntent + this.rng.range(-8, 8)))
-            : Math.min(50, Math.max(15, hiddenIntent)),
-          intelReliability: 'LOW',
+          estimatedBidChance: !isTarget
+            ? 0
+            : Math.min(95, Math.max(60, hiddenIntent + this.rng.range(-8, 8))),
+          intelReliability: isTarget ? 'LOW' : 'HIGH',
           isWithdrawn,
           hasBid: false,
-          totalFavorability: initialFavor.totalFavorability,
+          totalFavorability: isTarget ? initialFavor.totalFavorability : Math.min(25, initialFavor.totalFavorability),
           brandPerception: comp.attributes.brand,
           costOfferedMarginDelta: 0,
           financeOffered: comp.attributes.finance,
           execSupport: execBase,
-          trustScore: isTarget ? 78 : isAvoided ? 40 : 65,
+          trustScore: isHistoricalPrecedent ? 85 : isTarget ? 78 : 35,
         };
       });
 
