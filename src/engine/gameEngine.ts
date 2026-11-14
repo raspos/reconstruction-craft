@@ -112,7 +112,7 @@ export class GameEngine {
 
         const isWithdrawn = false; // 기본 상태에서는 어느 건설사도 원천 배제/철수되지 않고 시장에 상존
 
-        // 시장 선점 단지 특별 우세 살짝 반영 (6단지 DL/정우, 10단지 현대/한강, 12단지 GS/미래, 13단지 삼성/태성)
+        // 시장 선점 단지 특별 우세 살짝 반영 (6단지 정우, 10단지 한강, 12단지 미래, 13단지 태성)
         const isHistoricalPrecedent =
           (complex.id === 6 && comp.id === 'jungwoo') ||
           (complex.id === 10 && comp.id === 'hangang') ||

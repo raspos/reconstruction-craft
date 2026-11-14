@@ -228,7 +228,7 @@ export class AICompetitorEngine {
     const isTarget = company.targetComplexIds.includes(complex.id);
     let score = isTarget ? 65 : 28;
 
-    // 기선점/우호 단지 살짝 우대 (6 DL, 10 현대, 12 GS, 13 삼성)
+    // 기선점/우호 단지 살짝 우대 (6 정우, 10 한강, 12 미래, 13 태성)
     const isHistoricalPrecedent =
       (complex.id === 6 && company.id === 'jungwoo') ||
       (complex.id === 10 && company.id === 'hangang') ||

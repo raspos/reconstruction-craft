@@ -14,7 +14,7 @@ export interface RumorTemplate {
 
 export const RUMOR_TEMPLATES: RumorTemplate[] = [
   {
-    headline: '가온 6단지, 정우건설(DL) 아크로급 특화안으로 대세론 굳히나',
+    headline: '가온 6단지, 정우건설 하이엔드 특화안으로 대세론 굳히나',
     detail: '신속통합 선두주자인 6단지에서 정우건설이 일찌감치 정비계획 수립을 지원하며 하이엔드 설계를 약속해 조합원들의 탄탄한 신뢰를 선점했다는 첩보입니다.',
     rumorType: 'BRAND_DEMAND',
     relatedComplexId: 6,
@@ -22,7 +22,7 @@ export const RUMOR_TEMPLATES: RumorTemplate[] = [
     defaultTrueProbability: 0.88,
   },
   {
-    headline: '가온 10단지, 한강건설(현대) 남부 랜드마크 디에이치 정조준',
+    headline: '가온 10단지, 한강건설 남부 랜드마크 조성 정조준',
     detail: '한강건설 주택사업본부가 10단지를 남부권 핵심 거점으로 낙점하고 대규모 사전 홍보관 기획과 본사 임원진 현장 밀착 행보를 이어가고 있습니다.',
     rumorType: 'BRAND_DEMAND',
     relatedComplexId: 10,
@@ -30,7 +30,7 @@ export const RUMOR_TEMPLATES: RumorTemplate[] = [
     defaultTrueProbability: 0.88,
   },
   {
-    headline: '가온 13단지, 태성건설(삼성) 래미안 깃발 꽂기 위한 클린 수주 공세',
+    headline: '가온 13단지, 태성건설 깃발 꽂기 위한 클린 수주 공세',
     detail: '공사비 검증에 깐깐한 13단지 주민들 사이에서 태성건설의 초우량 재무구조와 클린 수주 철학이 큰 호응을 얻으며 수주 유력설이 퍼지고 있습니다.',
     rumorType: 'FINANCE_WAR',
     relatedComplexId: 13,
@@ -38,7 +38,7 @@ export const RUMOR_TEMPLATES: RumorTemplate[] = [
     defaultTrueProbability: 0.85,
   },
   {
-    headline: '가온 12단지, 미래건설(GS) 자이 브랜드의 파격 이주비 패키지 호평',
+    headline: '가온 12단지, 미래건설 파격 이주비 패키지 호평',
     detail: '고령 조합원 비율이 높은 12단지에서 미래건설이 무이자 사업비 대여와 LTV 확약 카드를 내밀며 표심을 빠르게 선점 중이라는 정보통 전언입니다.',
     rumorType: 'FINANCE_WAR',
     relatedComplexId: 12,

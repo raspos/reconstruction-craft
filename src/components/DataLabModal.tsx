@@ -24,7 +24,7 @@ const COMPANY_FINANCIAL_BENCHMARKS: Record<
   }
 > = {
   taeseong: {
-    realReference: '삼성물산 건설부문 모티브',
+    realReference: '초우량 재무 · 브랜드 파워형',
     evalRank: '시공능력평가 1위 (2024 국토부 공시)',
     revenue2024: '연결 매출 19.3조원',
     debtRatio: '부채비율 58.4% (업계 최저 수준)',
@@ -36,7 +36,7 @@ const COMPANY_FINANCIAL_BENCHMARKS: Record<
       '국내 최고 신용등급(AA+)과 탄탄한 무차입성 재무구조를 반영하여 자금력 92, 브랜드 92, 시공 캐파 7.0조원을 부여했습니다. 무리한 출혈 경쟁을 기피하는 선별 수주 기조를 성향에 반영했습니다.',
   },
   hangang: {
-    realReference: '현대건설 모티브',
+    realReference: '매머드 랜드마크 · 최대 캐파형',
     evalRank: '시공능력평가 2위 (주택/토목 최대 캐파)',
     revenue2024: '연결 매출 32.5조원 (업계 최대 매출)',
     debtRatio: '부채비율 124.6%',
@@ -48,7 +48,7 @@ const COMPANY_FINANCIAL_BENCHMARKS: Record<
       '업계 최대 시공 캐파와 거대한 현장 동원력을 반영해 시공 캐파 7.2조원, 초기 영업예산 330억원, 브랜드 88을 부여했습니다. 매머드 랜드마크 수주에 총력을 기울이는 공격적 베팅 성향을 반영했습니다.',
   },
   daeryuk: {
-    realReference: '대우건설 모티브',
+    realReference: '현장 기동 · 강력 영업조직형',
     evalRank: '시공능력평가 3위권',
     revenue2024: '연결 매출 11.6조원',
     debtRatio: '부채비율 176.8%',
@@ -60,7 +60,7 @@ const COMPANY_FINANCIAL_BENCHMARKS: Record<
       '국내 정비사업 역사상 가장 강력한 현장 OS 요원 조직력과 영업 돌파력을 보유한 특성을 반영해 영업 조직력 94, AP 6을 부여했습니다.',
   },
   mirae: {
-    realReference: 'GS건설 모티브',
+    realReference: '주거 감성 · 금융 패키지형',
     evalRank: '시공능력평가 4~5위권',
     revenue2024: '연결 매출 13.4조원',
     debtRatio: '부채비율 245.2%',
@@ -69,10 +69,10 @@ const COMPANY_FINANCIAL_BENCHMARKS: Record<
     creditGrade: 'A- (회복세)',
     sourceDate: '2024 사업보고서 기준',
     modelConversionLogic:
-      '주택 시장에서 감성적 디자인, 특화 커뮤니티(클럽 자이안 등)로 확고한 프리미엄을 다진 점을 감안해 브랜드 감성 89, 시공 캐파 5.8조원을 부여했습니다.',
+      '주택 시장에서 감성적 디자인과 대단지 특화 커뮤니티로 확고한 프리미엄을 다진 점을 감안해 브랜드 감성 89, 시공 캐파 5.8조원을 부여했습니다.',
   },
   jungwoo: {
-    realReference: 'DL이앤씨 모티브',
+    realReference: '클린 재무 · 원가 경쟁력 1위형',
     evalRank: '시공능력평가 5~6위권',
     revenue2024: '연결 매출 7.9조원',
     debtRatio: '부채비율 87.5% (순현금 상태 유지)',
@@ -84,7 +84,7 @@ const COMPANY_FINANCIAL_BENCHMARKS: Record<
       '철저한 원가 절감력과 무차입 수준의 클린 재무를 자랑하는 특성을 반영해 원가 경쟁력 95(업계 1위), 자금력 85, 시공 캐파 5.4조원을 부여했습니다.',
   },
   sewon: {
-    realReference: '포스코이앤씨 모티브',
+    realReference: '파격 이주비 · 금융 솔루션형',
     evalRank: '시공능력평가 7위권',
     revenue2024: '연결 매출 10.1조원',
     debtRatio: '부채비율 132.4%',
@@ -96,7 +96,7 @@ const COMPANY_FINANCIAL_BENCHMARKS: Record<
       '모그룹의 탄탄한 신용도를 등에 업고 파격적인 LTV 이주비 지원, 무이자 사업비 대여 등 금융 솔루션으로 승부하는 특성을 반영해 금융조건 제안력 96(업계 1위)을 부여했습니다.',
   },
   dongbang: {
-    realReference: '롯데건설 모티브',
+    realReference: '복합 개발 · 라이벌 견제형',
     evalRank: '시공능력평가 8위권',
     revenue2024: '연결 매출 6.8조원',
     debtRatio: '부채비율 214.8%',
@@ -108,7 +108,7 @@ const COMPANY_FINANCIAL_BENCHMARKS: Record<
       '복합 상업시설 개발 역량과 집요한 라이벌 마킹 성향을 반영하여 시공 캐파 4.8조원, 원가 82, 영업력 80을 부여했습니다.',
   },
   shinhwa: {
-    realReference: 'HDC현대산업개발 모티브',
+    realReference: '틈새 공략 · 고기동 실속형',
     evalRank: '시공능력평가 10위권',
     revenue2024: '연결 매출 4.2조원',
     debtRatio: '부채비율 142.1%',
@@ -252,7 +252,7 @@ export const DataLabModal: React.FC<Props> = ({ onClose }) => {
                             style={{ backgroundColor: comp.color }}
                           />
                           <span className="font-pixel text-sm font-bold text-white">{comp.name}</span>
-                          <span className="text-[10px] text-slate-400">({bench?.realReference})</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800/80 text-sky-300 font-sans border border-slate-700/60">{bench?.realReference}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono">

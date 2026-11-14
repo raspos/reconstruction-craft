@@ -136,7 +136,7 @@ function runSingleSimulation(gameIndex, rng) {
           brandScore += 4;
         }
 
-        // 시장 선점/우호 단지 살짝 우대 (6 DL, 10 현대, 12 GS, 13 삼성)
+        // 시장 선점/우호 단지 살짝 우대 (6 정우, 10 한강, 12 미래, 13 태성)
         const isPrecedent =
           (c.id === 6 && comp.id === 'jungwoo') ||
           (c.id === 10 && comp.id === 'hangang') ||
