@@ -10,9 +10,18 @@ import {
   Sparkles,
   ChevronRight,
   Dice5,
+  Calendar,
+  CheckCircle2,
 } from 'lucide-react';
 import { CONSTRUCTION_COMPANIES } from '../data/companies';
 import { CompanyData, PlayerTarget } from '../types/game';
+import {
+  SCHEDULE_MASTERPLANS,
+  ScheduleMasterplanId,
+  turnToYearMonth,
+  getEstimatedSelectionTurn,
+} from '../data/schedules';
+import { RAW_COMPLEX_DATA } from '../data/complexes';
 import { formatKRW } from '../utils/formatters';
 import { sound } from '../utils/sound';
 
@@ -20,7 +29,8 @@ interface Props {
   onStartGame: (
     companyId: string,
     gameMode: 'FULL_24' | 'FAST_12',
-    target: PlayerTarget
+    target: PlayerTarget,
+    scheduleId: ScheduleMasterplanId
   ) => void;
 }
 
@@ -28,10 +38,16 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('taeseong');
   const [gameMode, setGameMode] = useState<'FULL_24' | 'FAST_12'>('FULL_24');
   const [targetLevel, setTargetLevel] = useState<'SAFE' | 'CHALLENGE' | 'AGGRESSIVE' | 'RECKLESS'>('CHALLENGE');
+  const [selectedScheduleId, setSelectedScheduleId] = useState<ScheduleMasterplanId>('STANDARD');
+  const [showSchedulePreview, setShowSchedulePreview] = useState<boolean>(true);
 
   const selectedCompany =
     CONSTRUCTION_COMPANIES.find((c) => c.id === selectedCompanyId) ||
     CONSTRUCTION_COMPANIES[0];
+
+  const selectedPlan =
+    SCHEDULE_MASTERPLANS.find((p) => p.id === selectedScheduleId) ||
+    SCHEDULE_MASTERPLANS[0];
 
   // 회사의 기본 캐파에 따른 맞춤형 수주 목표 생성
   const getTargetsForCompany = (comp: CompanyData) => {
@@ -76,7 +92,7 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
 
   const handleStart = () => {
     sound.playGavelSuccess();
-    onStartGame(selectedCompanyId, gameMode, selectedTarget);
+    onStartGame(selectedCompanyId, gameMode, selectedTarget, selectedScheduleId);
   };
 
   return (
@@ -94,15 +110,15 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
           <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto">
             가온 신시가지 15개 아파트 단지의 재건축 시공권을 둘러싼 국내 8대 건설사의 치열한 수주전쟁!
             <br className="hidden sm:inline" />
-            주택사업 영업본부장으로 취임하여 수주 잔고와 회사의 이익을 극대화하십시오.
+            시공사 선정 마스터플랜 일정을 확정하고, 경쟁사들을 압도하여 업계의 왕좌에 오르십시오.
           </p>
         </div>
 
-        {/* 8 Construction Companies Selector Grid */}
+        {/* 1. 소속 건설사 선택 */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-pixel text-sm sm:text-base font-bold text-slate-200">
-              1. 소속 건설사 선택 (총 8개사)
+              1. 소속 건설사 선택 (총 8개사 중 택1)
             </h3>
             <button
               onClick={handleRandomSelect}
@@ -197,14 +213,107 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
           </div>
         </div>
 
-        {/* Target and Game Mode Selection */}
+        {/* 2. 시공사 선정 일정 마스터플랜 확정 (핵심 요구사항) */}
+        <div className="p-4 sm:p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-amber-400" />
+              <h3 className="font-pixel text-base font-bold text-white">
+                2. 가온 신시가지 15개 단지 시공사 선정 일정 마스터플랜 확정
+              </h3>
+            </div>
+            <button
+              onClick={() => setShowSchedulePreview(!showSchedulePreview)}
+              className="text-xs text-sky-400 hover:text-sky-300 font-pixel underline"
+            >
+              {showSchedulePreview ? '일정표 미리보기 접기' : '15개 단지 선정 일정표 미리보기'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {SCHEDULE_MASTERPLANS.map((plan) => {
+              const isSelected = selectedScheduleId === plan.id;
+              return (
+                <div
+                  key={plan.id}
+                  onClick={() => {
+                    sound.playClick();
+                    setSelectedScheduleId(plan.id);
+                  }}
+                  className={`p-3.5 rounded-lg border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                    isSelected
+                      ? 'bg-amber-950/40 border-amber-500 shadow-md ring-1 ring-amber-500/50'
+                      : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-pixel text-sm font-bold text-white">
+                        {plan.name}
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono">
+                        {plan.badge}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed mb-2">
+                      {plan.description}
+                    </p>
+                  </div>
+                  <div className="text-[11px] text-amber-400/90 font-mono pt-2 border-t border-slate-900">
+                    전략: {plan.strategyHint}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Schedule Preview Grid Table */}
+          {showSchedulePreview && (
+            <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-2 mt-2">
+              <div className="flex items-center justify-between text-xs text-slate-400 font-pixel">
+                <span className="text-amber-400 font-bold">
+                  [{selectedPlan.name}] 기준 15개 단지 시공사 선정 총회 예정 타임라인:
+                </span>
+                <span className="text-[11px] font-mono text-slate-500">2026년 3월 개막</span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 font-mono text-xs">
+                {RAW_COMPLEX_DATA.map((c) => {
+                  const sTurn = selectedPlan.startTurns[c.id] || c.startTurn;
+                  const finalTurn = getEstimatedSelectionTurn(sTurn);
+                  const dateStr = turnToYearMonth(finalTurn);
+
+                  return (
+                    <div
+                      key={c.id}
+                      className="p-2 rounded bg-slate-900 border border-slate-800 flex flex-col justify-between"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-pixel text-slate-200 font-bold">{c.name}</span>
+                        <span className="text-[10px] text-slate-400">
+                          {c.plannedUnits}세대
+                        </span>
+                      </div>
+                      <div className="pt-1 mt-1 border-t border-slate-800 flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400">{formatKRW(c.expectedCost)}</span>
+                        <strong className="text-amber-300">{dateStr} 총회</strong>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 3. 목표 설정 및 게임 모드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Target Selector */}
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-amber-400" />
               <h4 className="font-pixel text-sm font-bold text-white">
-                2. 올해의 수주 목표 설정
+                3. 올해의 수주 목표 설정
               </h4>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -239,7 +348,7 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-sky-400" />
               <h4 className="font-pixel text-sm font-bold text-white">
-                3. 게임 기간 모드 선택
+                4. 게임 기간 모드 선택
               </h4>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -290,7 +399,7 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
             onClick={handleStart}
             className="pixel-btn-mc pixel-btn-mc-amber px-8 py-3.5 text-base sm:text-lg font-bold text-white tracking-wide shadow-2xl flex items-center gap-2 mx-auto"
           >
-            <span>{selectedCompany.name} 영업본부장으로 취임 및 게임 시작</span>
+            <span>[{selectedPlan.name}] 일정 확정 및 영업본부장 취임</span>
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>

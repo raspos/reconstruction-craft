@@ -1,5 +1,6 @@
 import React from 'react';
 import { ComplexData, GameState } from '../types/game';
+import { CONSTRUCTION_COMPANIES } from '../data/companies';
 import { formatKRW } from '../utils/formatters';
 import { sound } from '../utils/sound';
 
@@ -23,14 +24,15 @@ export const TacticalMap2D: React.FC<Props> = ({
     if (bState.winnerId === gameState.playerCompanyId) {
       return (
         <span className="px-1.5 py-0.5 rounded bg-blue-500/20 border border-blue-500 text-blue-300 text-[10px] font-bold">
-          수주 완료
+          당사 수주
         </span>
       );
     }
     if (bState.winnerId) {
+      const winnerComp = CONSTRUCTION_COMPANIES.find((c) => c.id === bState.winnerId);
       return (
         <span className="px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-500 text-purple-300 text-[10px] font-bold">
-          경쟁사 수주
+          {winnerComp ? winnerComp.name : '경쟁사'} 수주
         </span>
       );
     }
@@ -44,28 +46,32 @@ export const TacticalMap2D: React.FC<Props> = ({
     }
 
     const myScore = bState.supportScores[gameState.playerCompanyId]?.totalFavorability || 0;
-    const otherScores = Object.entries(bState.supportScores)
+    const otherEntries = Object.entries(bState.supportScores)
       .filter(([id, s]) => id !== gameState.playerCompanyId && !s.isWithdrawn)
-      .map(([, s]) => s.totalFavorability);
-    const topOther = otherScores.length > 0 ? Math.max(...otherScores) : 0;
+      .map(([id, s]) => ({ id, score: s.totalFavorability }))
+      .sort((a, b) => b.score - a.score);
 
-    if (myScore >= 60 && myScore > topOther + 10) {
+    const topOther = otherEntries[0];
+    const topOtherComp = topOther ? CONSTRUCTION_COMPANIES.find((c) => c.id === topOther.id) : null;
+    const topOtherScore = topOther?.score || 0;
+
+    if (myScore >= 60 && myScore > topOtherScore + 10) {
       return (
         <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500 text-emerald-300 text-[10px] font-bold">
           당사 우세 ({myScore}%)
         </span>
       );
     }
-    if (topOther >= 60 && topOther > myScore + 10) {
+    if (topOtherScore >= 60 && topOtherScore > myScore + 10) {
       return (
         <span className="px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500 text-rose-300 text-[10px] font-bold">
-          경쟁사 우세 ({topOther}%)
+          {topOtherComp ? topOtherComp.name : '경쟁사'} 우세 ({topOtherScore}%)
         </span>
       );
     }
     return (
       <span className="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500 text-amber-300 text-[10px] font-bold">
-        박빙 경합 ({myScore}% vs {topOther}%)
+        경합 ({myScore}% vs {topOtherScore}%)
       </span>
     );
   };

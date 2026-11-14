@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ComplexData, GameState, SalesAction } from '../types/game';
 import { SALES_ACTIONS } from '../data/actions';
+import { CONSTRUCTION_COMPANIES } from '../data/companies';
 import { formatKRW, formatNumber, formatPercent } from '../utils/formatters';
 import { sound } from '../utils/sound';
 
@@ -46,6 +47,7 @@ export const ComplexDetailModal: React.FC<Props> = ({
     .sort((a, b) => b.totalFavorability - a.totalFavorability);
 
   const topRival = rivalScores[0];
+  const topRivalComp = CONSTRUCTION_COMPANIES.find((c) => c.id === topRival?.id);
 
   // 단지 관련 소문 필터
   const relatedRumors = gameState.rumors.filter((r) => r.relatedComplexId === complex.id);
@@ -155,16 +157,18 @@ export const ComplexDetailModal: React.FC<Props> = ({
           </div>
 
           {/* Voting Support Comparison Bar */}
-          <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-            <div className="flex items-center justify-between text-xs mb-1.5 font-pixel">
-              <span className="text-sky-300 font-bold">
-                당사 예상 지지율: {mySupport?.isWithdrawn ? '철수' : `${myScore}%`}
+          <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between text-xs font-pixel">
+              <span className="text-sky-300 font-bold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-sky-400" />
+                당사 지지율: {mySupport?.isWithdrawn ? '철수' : `${myScore}%`}
               </span>
-              <span className="text-rose-300 font-bold">
-                경쟁 1위 예상 지지율: {topRival ? `${topRival.totalFavorability}%` : '0%'}
+              <span className="text-rose-300 font-bold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                경쟁 1위: {topRivalComp ? `${topRivalComp.name} (${topRival.totalFavorability}%)` : '없음'}
               </span>
             </div>
-            <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden flex">
+            <div className="w-full h-3.5 bg-slate-800 rounded-full overflow-hidden flex shadow-inner">
               <div
                 className="h-full bg-sky-500 transition-all duration-300"
                 style={{ width: `${mySupport?.isWithdrawn ? 0 : myScore}%` }}
@@ -174,7 +178,42 @@ export const ComplexDetailModal: React.FC<Props> = ({
                 style={{ width: `${topRival ? topRival.totalFavorability : 0}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1.5">
+
+            {/* Competitor Chips in this complex */}
+            <div className="pt-2 border-t border-slate-900">
+              <span className="text-[11px] text-slate-400 font-pixel block mb-1.5">
+                이 단지에 입찰/사전영업 중인 경쟁 건설사 현황:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {rivalScores.map((rival) => {
+                  const comp = CONSTRUCTION_COMPANIES.find((c) => c.id === rival.id);
+                  if (!comp) return null;
+                  return (
+                    <div
+                      key={rival.id}
+                      className={`px-2 py-1 rounded text-[11px] font-mono border flex items-center gap-1.5 ${
+                        rival.isWithdrawn
+                          ? 'bg-slate-900 text-slate-500 border-slate-800 line-through'
+                          : rival.totalFavorability >= 60
+                          ? 'bg-rose-950/60 text-rose-300 border-rose-700/80 font-bold'
+                          : 'bg-slate-900 text-slate-300 border-slate-800'
+                      }`}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: comp.color }}
+                      />
+                      <span>{comp.name}</span>
+                      <strong className="text-amber-400">
+                        {rival.isWithdrawn ? '철수' : `${rival.totalFavorability}%`}
+                      </strong>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="text-[11px] text-slate-400 pt-1">
               <span>{complex.description}</span>
             </div>
           </div>

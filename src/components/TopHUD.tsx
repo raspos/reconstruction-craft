@@ -8,6 +8,7 @@ import {
   UserCheck,
   AlertTriangle,
   ChevronRight,
+  Users,
 } from 'lucide-react';
 import { GameState, CompanyData } from '../types/game';
 import { formatKRW, formatPercent } from '../utils/formatters';
@@ -19,6 +20,8 @@ interface Props {
   totalWonVolume: number;
   totalExpectedProfit: number;
   onNextTurn: () => void;
+  onOpenSchedule: () => void;
+  onOpenCompetitors: () => void;
 }
 
 export const TopHUD: React.FC<Props> = ({
@@ -27,6 +30,8 @@ export const TopHUD: React.FC<Props> = ({
   totalWonVolume,
   totalExpectedProfit,
   onNextTurn,
+  onOpenSchedule,
+  onOpenCompetitors,
 }) => {
   const { currentTurn, totalTurns, availableAP, maxAP, budget, usedCapa, maxCapa, ceoTrust, cfoTrust, legalRisk } =
     gameState;
@@ -76,6 +81,33 @@ export const TopHUD: React.FC<Props> = ({
             <span className="text-xs text-slate-400 font-mono">
               ({displayYear}년 {displayMonth}월)
             </span>
+          </div>
+
+          {/* Quick Action: Schedule Timeline & Competitors Dossier */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => {
+                sound.playClick();
+                onOpenSchedule();
+              }}
+              className="px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/50 font-pixel text-xs flex items-center gap-1.5 shadow-sm"
+              title="15개 단지 시공사 선정 타임라인 일정표 열기"
+            >
+              <Calendar className="w-3.5 h-3.5 text-amber-400" />
+              <span>선정 일정표</span>
+            </button>
+
+            <button
+              onClick={() => {
+                sound.playClick();
+                onOpenCompetitors();
+              }}
+              className="px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-red-300 border border-red-500/50 font-pixel text-xs flex items-center gap-1.5 shadow-sm"
+              title="경쟁 건설사 현황 및 전력 분석 열기"
+            >
+              <Users className="w-3.5 h-3.5 text-red-400" />
+              <span>경쟁사 전력</span>
+            </button>
           </div>
 
           {/* Target & Won Volume Progress */}

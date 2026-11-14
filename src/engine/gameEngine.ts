@@ -11,6 +11,7 @@ import {
 import { RAW_COMPLEX_DATA } from '../data/complexes';
 import { CONSTRUCTION_COMPANIES } from '../data/companies';
 import { SALES_ACTIONS } from '../data/actions';
+import { SCHEDULE_MASTERPLANS, ScheduleMasterplanId } from '../data/schedules';
 import { SeededRNG } from './rng';
 import { calculateFavorability } from './favorabilityEngine';
 import { AICompetitorEngine } from './aiCompetitorEngine';
@@ -30,7 +31,8 @@ export class GameEngine {
     playerCompanyId: string = 'taeseong',
     gameMode: 'FULL_24' | 'FAST_12' = 'FULL_24',
     seed: number = Date.now(),
-    targetOption?: PlayerTarget
+    targetOption?: PlayerTarget,
+    scheduleMasterplanId: ScheduleMasterplanId = 'STANDARD'
   ) {
     this.rng = new SeededRNG(seed);
     this.aiEngine = new AICompetitorEngine(this.rng);
@@ -38,19 +40,24 @@ export class GameEngine {
     this.rumorEngine = new RumorEngine(this.rng);
     this.allComplexes = JSON.parse(JSON.stringify(RAW_COMPLEX_DATA));
 
-    this.state = this.initializeGameState(playerCompanyId, gameMode, targetOption);
+    this.state = this.initializeGameState(playerCompanyId, gameMode, targetOption, scheduleMasterplanId);
   }
 
   // 초기 게임 상태 생성
   private initializeGameState(
     playerCompanyId: string,
     gameMode: 'FULL_24' | 'FAST_12',
-    targetOption?: PlayerTarget
+    targetOption?: PlayerTarget,
+    scheduleMasterplanId: ScheduleMasterplanId = 'STANDARD'
   ): GameState {
     const totalTurns = gameMode === 'FULL_24' ? 24 : 12;
     const playerCompany =
       CONSTRUCTION_COMPANIES.find((c) => c.id === playerCompanyId) ||
       CONSTRUCTION_COMPANIES[0];
+
+    const masterplan =
+      SCHEDULE_MASTERPLANS.find((p) => p.id === scheduleMasterplanId) ||
+      SCHEDULE_MASTERPLANS[0];
 
     // 목표 설정이 없을 경우 회사의 기본 시공 캐파에 비례한 기본 목표 부여
     const defaultTarget: PlayerTarget = targetOption || {
@@ -62,9 +69,11 @@ export class GameEngine {
     // 15개 단지 수주전 초기 상태 구성
     const complexStates: Record<number, ComplexBiddingState> = {};
     this.allComplexes.forEach((complex) => {
+      // 마스터플랜에 따른 시작 턴 적용
+      const baseStartTurn = masterplan.startTurns[complex.id] || complex.startTurn;
       // 턴 스케일 조정 (12턴 모드인 경우 시작 턴 압축)
       const adjustedStartTurn =
-        gameMode === 'FAST_12' ? Math.max(1, Math.ceil(complex.startTurn / 2)) : complex.startTurn;
+        gameMode === 'FAST_12' ? Math.max(1, Math.ceil(baseStartTurn / 2)) : baseStartTurn;
       complex.startTurn = adjustedStartTurn;
 
       const supportScores: ComplexBiddingState['supportScores'] = {};

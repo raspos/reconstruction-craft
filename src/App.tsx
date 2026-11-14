@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GameEngine } from './engine/gameEngine';
 import { GameState, ComplexData, PlayerTarget } from './types/game';
 import { CONSTRUCTION_COMPANIES } from './data/companies';
+import { ScheduleMasterplanId } from './data/schedules';
 import { CraftUniverseNavbar } from './components/CraftUniverseNavbar';
 import { TopHUD } from './components/TopHUD';
 import { CityMapCanvas } from './components/3d/CityMapCanvas';
@@ -13,9 +14,12 @@ import { CompanySelectScreen } from './components/CompanySelectScreen';
 import { EndingResultScreen } from './components/EndingResultScreen';
 import { DataLabModal } from './components/DataLabModal';
 import { BalanceSimulatorModal } from './components/BalanceSimulatorModal';
+import { ScheduleTimelineModal } from './components/ScheduleTimelineModal';
+import { CompetitorRosterModal } from './components/CompetitorRosterModal';
 import { saveGameToStorage, loadGameFromStorage, clearSavedGame } from './utils/storage';
+import { formatKRW } from './utils/formatters';
 import { sound } from './utils/sound';
-import { Box, Map, History, AlertCircle } from 'lucide-react';
+import { Box, Map, History, Users, Calendar } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [engine, setEngine] = useState<GameEngine | null>(null);
@@ -27,6 +31,9 @@ export const App: React.FC = () => {
   const [selectedComplexId, setSelectedComplexId] = useState<number | null>(null);
   const [isDataLabOpen, setIsDataLabOpen] = useState(false);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isCompetitorModalOpen, setIsCompetitorModalOpen] = useState(false);
+
   const [turnResultData, setTurnResultData] = useState<{
     isOpen: boolean;
     contracts: any[];
@@ -45,13 +52,14 @@ export const App: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // 게임 시작 (회사, 모드, 목표 설정)
+  // 게임 시작 (회사, 모드, 목표, 시공사 선정 일정 마스터플랜 설정)
   const handleStartGame = (
     companyId: string,
     gameMode: 'FULL_24' | 'FAST_12',
-    target: PlayerTarget
+    target: PlayerTarget,
+    scheduleId: ScheduleMasterplanId = 'STANDARD'
   ) => {
-    const newEngine = new GameEngine(companyId, gameMode, Date.now(), target);
+    const newEngine = new GameEngine(companyId, gameMode, Date.now(), target, scheduleId);
     setEngine(newEngine);
     const st = newEngine.getState();
     setGameState({ ...st });
@@ -210,6 +218,8 @@ export const App: React.FC = () => {
         totalWonVolume={totalWonVolume}
         totalExpectedProfit={totalExpectedProfit}
         onNextTurn={handleNextTurn}
+        onOpenSchedule={() => setIsScheduleModalOpen(true)}
+        onOpenCompetitors={() => setIsCompetitorModalOpen(true)}
       />
 
       {/* Toast Notification */}
@@ -221,15 +231,66 @@ export const App: React.FC = () => {
 
       {/* Main Play Area */}
       <main className="max-w-7xl mx-auto w-full p-3 sm:p-5 space-y-4 flex-1">
+        {/* Competitor Real-Time Intelligence Ticker Strip */}
+        <div className="bg-slate-900/80 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between gap-2 overflow-x-auto text-xs shadow-sm">
+          <div className="flex items-center gap-1.5 shrink-0 text-slate-400 font-pixel">
+            <Users className="w-4 h-4 text-red-400" />
+            <span className="hidden sm:inline">경쟁 7개 건설사 현황:</span>
+          </div>
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-0.5">
+            {CONSTRUCTION_COMPANIES.filter((c) => c.id !== gameState.playerCompanyId).map((comp) => {
+              const cState = gameState.competitorStates[comp.id];
+              const wonVol = cState?.totalWonVolume || 0;
+              const wonCount = cState?.wonComplexIds.length || 0;
+              return (
+                <button
+                  key={comp.id}
+                  onClick={() => {
+                    sound.playClick();
+                    setIsCompetitorModalOpen(true);
+                  }}
+                  className="px-2 py-1 rounded bg-slate-950 border border-slate-800 hover:border-slate-700 flex items-center gap-1.5 shrink-0 text-[11px] font-mono transition-colors"
+                >
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: comp.color }}
+                  />
+                  <span className="font-bold text-white">{comp.name}</span>
+                  <span className="text-emerald-400 font-bold">{formatKRW(wonVol)}</span>
+                  {wonCount > 0 && (
+                    <span className="text-[10px] text-slate-400">({wonCount}곳)</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <button
+            onClick={() => {
+              sound.playClick();
+              setIsCompetitorModalOpen(true);
+            }}
+            className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 shrink-0 font-pixel text-[11px] border border-slate-700"
+          >
+            상세 전력 분석 →
+          </button>
+        </div>
+
         {/* Map View Mode Switcher Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="font-pixel text-base sm:text-lg font-bold text-white">
               가온 신시가지 15개 단지 수주 관제 지도
             </h2>
-            <span className="text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 font-mono">
-              시공사 선정 2년 대장정
-            </span>
+            <button
+              onClick={() => {
+                sound.playClick();
+                setIsScheduleModalOpen(true);
+              }}
+              className="text-xs px-2 py-0.5 rounded bg-amber-950/60 border border-amber-500/60 text-amber-300 font-pixel flex items-center gap-1 hover:bg-amber-900/60"
+            >
+              <Calendar className="w-3 h-3 text-amber-400" />
+              <span>전체 선정 일정표</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs font-pixel">
@@ -315,6 +376,26 @@ export const App: React.FC = () => {
           contractsSigned={turnResultData.contracts}
           newEvents={turnResultData.events}
           onClose={() => setTurnResultData({ isOpen: false, contracts: [], events: [] })}
+        />
+      )}
+
+      {/* Schedule Timeline Modal */}
+      {isScheduleModalOpen && (
+        <ScheduleTimelineModal
+          complexes={engine.allComplexes}
+          gameState={gameState}
+          onClose={() => setIsScheduleModalOpen(false)}
+          onSelectComplex={(id) => setSelectedComplexId(id)}
+        />
+      )}
+
+      {/* Competitor Roster Intelligence Modal */}
+      {isCompetitorModalOpen && (
+        <CompetitorRosterModal
+          gameState={gameState}
+          complexes={engine.allComplexes}
+          onClose={() => setIsCompetitorModalOpen(false)}
+          onSelectComplex={(id) => setSelectedComplexId(id)}
         />
       )}
 
