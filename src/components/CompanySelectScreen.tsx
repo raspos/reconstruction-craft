@@ -24,6 +24,7 @@ import {
 import { RAW_COMPLEX_DATA } from '../data/complexes';
 import { formatKRW } from '../utils/formatters';
 import { sound } from '../utils/sound';
+import { VisitorCounter, PersonalRunBadge } from './VisitorCounter';
 
 interface Props {
   onStartGame: (
@@ -394,7 +395,7 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
         </div>
 
         {/* Start Game Action Button */}
-        <div className="text-center pt-2">
+        <div className="text-center pt-2 space-y-4">
           <button
             onClick={handleStart}
             className="pixel-btn-mc pixel-btn-mc-amber px-8 py-3.5 text-base sm:text-lg font-bold text-white tracking-wide shadow-2xl flex items-center gap-2 mx-auto"
@@ -402,6 +403,12 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
             <span>[{selectedPlan.name}] 일정 확정 및 영업본부장 취임</span>
             <ChevronRight className="w-5 h-5" />
           </button>
+
+          {/* Public Visitor & Challenge Badges */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <PersonalRunBadge />
+            <VisitorCounter />
+          </div>
         </div>
       </div>
     </div>

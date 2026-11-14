@@ -16,6 +16,8 @@ import { GameState, ComplexData } from '../types/game';
 import { EndingEngine, FinalGameEvaluation } from '../engine/endingEngine';
 import { formatKRW, formatPercent } from '../utils/formatters';
 import { sound } from '../utils/sound';
+import { PersonalRunBadge, VisitorCounter } from './VisitorCounter';
+import { recordCompletedRun, trackFunnelStep } from '../utils/funnelTracker';
 
 interface Props {
   gameState: GameState;
@@ -31,10 +33,17 @@ export const EndingResultScreen: React.FC<Props> = ({
   const [evaluation, setEvaluation] = useState<FinalGameEvaluation | null>(null);
   const [copied, setCopied] = useState(false);
   const shareCardRef = useRef<HTMLDivElement>(null);
+  const recordedRef = useRef(false);
 
   useEffect(() => {
     const result = EndingEngine.evaluateGame(gameState, allComplexes);
     setEvaluation(result);
+
+    if (!recordedRef.current) {
+      recordedRef.current = true;
+      recordCompletedRun();
+      trackFunnelStep('ending');
+    }
 
     if (result.ending.grade === 'S' || result.ending.grade === 'A') {
       sound.playGavelSuccess();
@@ -55,6 +64,7 @@ export const EndingResultScreen: React.FC<Props> = ({
 
   const handleShareCopy = () => {
     sound.playClick();
+    trackFunnelStep('share');
     const shareText = `[재건축 크래프트: 시공사 수주전쟁]\n엔딩: [${ending.title} - ${ending.subtitle}]\n수주 실적: ${formatKRW(playerSummary.totalWonVolume)} (목표 달성률 ${targetAchievementRate}%)\n영업이익: 업계 ${playerSummary.profitRank}위 (${formatKRW(playerSummary.totalExpectedProfit)})\nhttps://raspos.github.io/reconstruction-craft/`;
 
     if (navigator.clipboard) {
@@ -67,6 +77,7 @@ export const EndingResultScreen: React.FC<Props> = ({
   const handleDownloadCard = async () => {
     if (!shareCardRef.current) return;
     sound.playClick();
+    trackFunnelStep('share');
     try {
       const dataUrl = await toPng(shareCardRef.current, { quality: 0.95 });
       const link = document.createElement('a');
@@ -81,6 +92,11 @@ export const EndingResultScreen: React.FC<Props> = ({
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-8 flex flex-col items-center justify-center">
       <div className="max-w-4xl w-full space-y-6 animate-in fade-in zoom-in-95">
+        {/* Personal Challenge Record Badge */}
+        <div className="flex justify-center">
+          <PersonalRunBadge />
+        </div>
+
         {/* Printable/Shareable Newspaper Card */}
         <div
           ref={shareCardRef}
@@ -205,6 +221,11 @@ export const EndingResultScreen: React.FC<Props> = ({
               })}
             </div>
           </div>
+        </div>
+
+        {/* Global Public Visitor & Funnel Counter */}
+        <div className="flex justify-center">
+          <VisitorCounter />
         </div>
 
         {/* Action Controls */}

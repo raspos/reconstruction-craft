@@ -19,6 +19,8 @@ import { CompetitorRosterModal } from './components/CompetitorRosterModal';
 import { ProposalBuilderModal } from './components/ProposalBuilderModal';
 import { VirtualCommunityModal } from './components/VirtualCommunityModal';
 import { StrategyWarRoomModal } from './components/StrategyWarRoomModal';
+import { VisitorCounter } from './components/VisitorCounter';
+import { trackFunnelStep } from './utils/funnelTracker';
 import { saveGameToStorage, loadGameFromStorage, clearSavedGame } from './utils/storage';
 import { formatKRW } from './utils/formatters';
 import { sound } from './utils/sound';
@@ -71,6 +73,7 @@ export const App: React.FC = () => {
     setGameState({ ...st });
     setPhase('GAME');
     saveGameToStorage(st);
+    trackFunnelStep('start');
   };
 
   // 영업 행동 실행
@@ -141,6 +144,10 @@ export const App: React.FC = () => {
     const st = engine.getState();
     setGameState({ ...st });
     saveGameToStorage(st);
+
+    if (contractsSigned.some((c) => c.winnerName === playerCompany.name)) {
+      trackFunnelStep('first_win');
+    }
 
     if (st.isGameOver) {
       setPhase('ENDING');
@@ -522,6 +529,41 @@ export const App: React.FC = () => {
 
       {/* Balance Simulator Modal */}
       {isSimulatorOpen && <BalanceSimulatorModal onClose={() => setIsSimulatorOpen(false)} />}
+
+      {/* Footer Strip with Public Visitor Counter */}
+      <footer className="w-full bg-slate-950 border-t border-slate-800/80 px-4 py-3 mt-6 shrink-0">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 font-pixel">
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400 font-bold">CRAFT UNIVERSE Episode 3</span>
+            <span>•</span>
+            <span>재건축 크래프트: 시공사 수주전쟁</span>
+          </div>
+
+          <VisitorCounter />
+
+          <div className="flex items-center gap-3 text-[11px]">
+            <a
+              href="https://raspos.github.io/personnel-craft/"
+              target="_blank"
+              rel="noreferrer"
+              className="text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              인사 크래프트
+            </a>
+            <span>•</span>
+            <a
+              href="https://raspos.github.io/hongdam-craft/"
+              target="_blank"
+              rel="noreferrer"
+              className="text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              홍담 크래프트
+            </a>
+            <span>•</span>
+            <span className="text-slate-600">© 2026 CRAFT UNIVERSE</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
