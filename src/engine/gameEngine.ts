@@ -121,6 +121,19 @@ export class GameEngine {
           isWithdrawn = comp.id !== playerCompanyId; // AI는 캐파초과/배제 단지 즉시 철수 처리
         }
 
+        // 시장 선점 단지 특별 우세 반영 (6단지 DL/정우, 10단지 현대/한강, 12단지 GS/미래, 13단지 삼성/태성)
+        const isHistoricalPrecedent =
+          (complex.id === 6 && comp.id === 'jungwoo') ||
+          (complex.id === 10 && comp.id === 'hangang') ||
+          (complex.id === 12 && comp.id === 'mirae') ||
+          (complex.id === 13 && comp.id === 'taeseong');
+
+        if (isHistoricalPrecedent) {
+          generalBase += 12;
+          execBase += 14;
+          hiddenIntent = Math.min(95, hiddenIntent + 15);
+        }
+
         const initialFavor = calculateFavorability({
           company: comp,
           complex,
@@ -129,11 +142,18 @@ export class GameEngine {
           brandPerceptionBase: comp.attributes.brand,
           costOfferedMarginDelta: 0,
           financeOfferedScore: comp.attributes.finance,
-          trustScore: isTarget ? 78 : isAvoided ? 40 : 65,
+          trustScore: isHistoricalPrecedent ? 85 : isTarget ? 78 : isAvoided ? 40 : 65,
         });
 
         const initialActions: ObservableCompetitorAction[] = [];
-        if (
+        if (isHistoricalPrecedent && comp.id !== playerCompanyId) {
+          initialActions.push({
+            type: 'BANNER_AD',
+            turn: 1,
+            description: `${comp.name} 사전 정비계획 협력 및 하이엔드 브랜드 특화 설명회 개최 완료`,
+            sincerityWeight: 0.5,
+          });
+        } else if (
           complex.startTurn === 1 &&
           comp.id !== playerCompanyId &&
           isTarget &&

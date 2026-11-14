@@ -29,9 +29,9 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 74,
       riskTolerance: 35,  // 불법/위험 영업 회피
     },
-    targetComplexIds: [1, 7, 14], // 대형 랜드마크 3곳 선별 집중
+    targetComplexIds: [1, 7, 13, 14], // 대형 랜드마크 및 13단지 선별 집중
     avoidedComplexIds: [4, 8, 15], // 소형 실속 단지는 브랜드 프리미엄 훼손 우려로 직접 입찰 배제
-    targetFocusDescription: '1단지·7단지·14단지 등 상징성 높은 핵심 랜드마크 선별 수주에 집중하며, 소형 단지는 입찰을 지양합니다.',
+    targetFocusDescription: '1·7·14단지 랜드마크와 더불어, 래미안 브랜드 선호도가 탄탄한 13단지를 핵심 공략 단지로 선별합니다.',
   },
   {
     id: 'hangang',
@@ -58,7 +58,7 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
     },
     targetComplexIds: [7, 10, 14], // 신시가지 3대 매머드 랜드마크 정조준
     avoidedComplexIds: [6, 8, 11, 15], // 소형 실속 단지 기피
-    targetFocusDescription: '7단지·10단지·14단지 등 3조원 안팎의 매머드급 랜드마크를 정조준하며, 소형 단지에는 인력을 투입하지 않습니다.',
+    targetFocusDescription: '7단지·14단지와 더불어 남부 핵심 거점으로 사전 정지작업을 마친 10단지(디에이치)를 정조준합니다.',
   },
   {
     id: 'daeryuk',
@@ -110,9 +110,9 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 76,
       riskTolerance: 65,
     },
-    targetComplexIds: [1, 3, 6], // 주거환경 우수 및 디자인/감성 특화 단지
+    targetComplexIds: [1, 3, 12], // 주거환경 우수 및 12단지 금융 패키지 선점
     avoidedComplexIds: [10, 14], // 초대형 출혈 경쟁 단지 회피
-    targetFocusDescription: '1단지·3단지·6단지 등 주거 쾌적성과 특화 외관·커뮤니티 설계를 중시하는 고급 주거지에 역량을 집중합니다.',
+    targetFocusDescription: '1단지·3단지(디자인 특화) 및 파격적인 이주비/금융 패키지로 표심을 선점한 12단지(자이)에 역량을 집중합니다.',
   },
   {
     id: 'jungwoo',
@@ -137,9 +137,9 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 95,       // 원가 경쟁력 1위 (버프)
       riskTolerance: 40,
     },
-    targetComplexIds: [5, 8, 11, 12], // 실리파 비중이 높고 마진이 보장되는 알짜 단지
+    targetComplexIds: [5, 6, 8, 11], // 6단지 신통 급행 텃밭 및 실리파 알짜 단지
     avoidedComplexIds: [7, 14], // 외관 출혈 경쟁이 심하고 마진이 박한 매머드 단지 제외
-    targetFocusDescription: '5단지·8단지·11단지·12단지 등 원가 경쟁력과 알짜 마진이 보장되는 실속 단지에 집중하며, 랜드마크는 배제합니다.',
+    targetFocusDescription: '신속통합 단계부터 탄탄한 입지를 굳혀둔 6단지(아크로 특화) 및 5·8·11단지 등 알짜 실속 사업장에 집중합니다.',
   },
   {
     id: 'sewon',

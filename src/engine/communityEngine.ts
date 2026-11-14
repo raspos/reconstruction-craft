@@ -33,6 +33,54 @@ export function generateCommunityPosts(
 
   if (activeComplexes.length === 0) return [];
 
+  // 1턴 초기 시장 선점 단지(6단지 DL, 10단지 현대, 12단지 GS, 13단지 삼성) 주민 여론 반영
+  if (turn === 1) {
+    newPosts.push({
+      id: `post_t1_c6_dl`,
+      complexId: 6,
+      authorNickname: '신통모범주민',
+      authorBadge: '조합원',
+      voterGroup: 'PRAGMATIC',
+      content: `[가온 6단지] 우리 단지는 신속통합 단계부터 정우(DL)가 열심히 발맞춰줘서 분위기 괜찮습니다. 공사비 합리적으로 가져오고 아크로급 브랜드 달아주면 대세론 굳힐 듯하네요.`,
+      turn: 1,
+      isVocalMinority: false,
+      likes: 42,
+    });
+    newPosts.push({
+      id: `post_t1_c10_hd`,
+      complexId: 10,
+      authorNickname: '디에이치존버단',
+      authorBadge: '대의원',
+      voterGroup: 'BRAND',
+      content: `[가온 10단지] 남부 최대 랜드마크는 한강(현대) 디에이치가 워낙 물밑작업을 세게 해놔서 대세론이 있긴 합니다. 다른 1군 건설사들도 제안서 제대로 들고 들어와야 경쟁이 붙을 텐데요.`,
+      turn: 1,
+      isVocalMinority: false,
+      likes: 58,
+    });
+    newPosts.push({
+      id: `post_t1_c12_gs`,
+      complexId: 12,
+      authorNickname: '이주비가제일중요',
+      authorBadge: '조합원',
+      voterGroup: 'PRAGMATIC',
+      content: `[가온 12단지] 우리 단지 어르신들은 미래(GS) 금융조건 이야기 많이 하시네요. 무이자 사업비랑 LTV 확약 확실히 빼준다면 자이 브랜드 선호도가 높을 것 같습니다.`,
+      turn: 1,
+      isVocalMinority: false,
+      likes: 37,
+    });
+    newPosts.push({
+      id: `post_t1_c13_samsung`,
+      complexId: 13,
+      authorNickname: '원가검증철저',
+      authorBadge: '동대표',
+      voterGroup: 'BRAND',
+      content: `[가온 13단지] 공사비 검증 칼같이 한다더니 태성(삼성) 래미안 들어오면 브랜드 가치와 재무 안정성은 확실하다는 여론이 많습니다. 클린 수주 기대해 봅니다.`,
+      turn: 1,
+      isVocalMinority: false,
+      likes: 49,
+    });
+  }
+
   // 1. 단지별 현황 반영 게시글
   activeComplexes.slice(0, 3).forEach(complex => {
     const state = complexStates[complex.id];
