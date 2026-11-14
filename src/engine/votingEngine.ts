@@ -104,8 +104,9 @@ export function simulateGeneralAssemblyVote(
   // 케이스 B: 응찰사 1곳 (단독 응찰)
   if (participatingCompanyIds.length === 1) {
     const soleId = participatingCompanyIds[0];
-    const comp = companyMap.get(soleId);
-    const compName = comp?.name || '미상';
+    const comp = companyMap.get(soleId) || companies.find((c) => c.id === soleId);
+    const compName =
+      comp?.name || (soleId === playerCompanyId ? playerCompany?.name || '당사' : '경쟁 건설사');
     const alreadyWon = builderWonCounts[soleId] || 0;
 
     // 단일 건설사 수주 한도 상한 (최대 5개 단지 제한)

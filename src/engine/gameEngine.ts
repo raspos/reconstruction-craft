@@ -945,6 +945,8 @@ export class GameEngine {
         const fallbackComp = CONSTRUCTION_COMPANIES.find((c) => c.id === fallbackWinner)!;
 
         bState.winnerId = fallbackWinner;
+        voteResult.winnerId = fallbackWinner;
+        voteResult.winnerName = fallbackComp.name;
         bState.isRebid = false;
         bState.isSoleBid = true;
         bState.negotiatedContract = true;
@@ -973,21 +975,28 @@ export class GameEngine {
 
     // 계약 완료 처리
     bState.currentStage = 'contracted';
-    const winnerName = voteResult.winnerName || '미상';
+    const effectiveWinnerId = bState.winnerId || voteResult.winnerId;
+    const resolvedWinnerComp = CONSTRUCTION_COMPANIES.find((c) => c.id === effectiveWinnerId);
+    const playerCompanyObj = CONSTRUCTION_COMPANIES.find((c) => c.id === this.state.playerCompanyId);
+    const winnerName =
+      (voteResult.winnerIsConsortium && voteResult.winnerName) ||
+      resolvedWinnerComp?.name ||
+      voteResult.winnerName ||
+      (effectiveWinnerId === this.state.playerCompanyId ? playerCompanyObj?.name || '당사' : '선정 시공사');
 
     // 사후 계약 관리 객체 초기화
     bState.contractFulfillment = {
-      originalAgreedMargin: voteResult.finalProfitMargin,
-      currentExpectedMargin: voteResult.finalProfitMargin,
+      originalAgreedMargin: bState.finalProfitMargin,
+      currentExpectedMargin: bState.finalProfitMargin,
       delayMonths: 0,
       unresolvedDisputes: 0,
     };
 
-    if (voteResult.winnerId === this.state.playerCompanyId) {
+    if (effectiveWinnerId === this.state.playerCompanyId) {
       bState.playerBidStatus = 'WON';
       this.state.usedCapa += complex.expectedCost;
       this.state.ceoTrust = Math.min(100, this.state.ceoTrust + 15);
-      if (voteResult.finalProfitMargin < 2.0) {
+      if (bState.finalProfitMargin < 2.0) {
         this.state.cfoTrust = Math.max(10, this.state.cfoTrust - 10);
       } else {
         this.state.cfoTrust = Math.min(100, this.state.cfoTrust + 8);
@@ -995,10 +1004,10 @@ export class GameEngine {
 
       this.state.turnLogs.push({
         turn: this.state.currentTurn,
-        message: `[수주 승리!] ${voteResult.assemblySummary}`,
+        message: `[수주 승리!] ${voteResult.assemblySummary || `${complex.name} 시공사로 당사가 최종 선정되었습니다!`}`,
         type: 'SUCCESS',
       });
-    } else {
+    } else if (effectiveWinnerId) {
       if (playerParticipates) {
         bState.playerBidStatus = 'LOST';
         this.state.ceoTrust = Math.max(10, this.state.ceoTrust - 8);
@@ -1009,25 +1018,25 @@ export class GameEngine {
         });
       }
 
-      if (voteResult.winnerId) {
-        const comp = this.state.competitorStates[voteResult.winnerId];
-        if (comp) {
-          comp.usedCapa += complex.expectedCost;
+      const comp = this.state.competitorStates[effectiveWinnerId];
+      if (comp) {
+        comp.usedCapa += complex.expectedCost;
+        if (!comp.wonComplexIds.includes(complex.id)) {
           comp.wonComplexIds.push(complex.id);
-          comp.totalWonVolume += complex.expectedCost;
         }
-        this.state.turnLogs.push({
-          turn: this.state.currentTurn,
-          message: `[수주 결과] ${complex.name}의 시공권은 ${winnerName}에게 돌아갔습니다. (${voteResult.keyVoteFactor})`,
-          type: 'INFO',
-        });
+        comp.totalWonVolume += complex.expectedCost;
       }
+      this.state.turnLogs.push({
+        turn: this.state.currentTurn,
+        message: `[수주 결과] ${complex.name}의 시공권은 ${winnerName}에게 돌아갔습니다. (${voteResult.keyVoteFactor || '수의계약 인준'})`,
+        type: 'INFO',
+      });
     }
 
     contractsSigned.push({
       complexName: complex.name,
       winnerName,
-      price: voteResult.contractPrice,
+      price: bState.contractPrice,
     });
   }
 
