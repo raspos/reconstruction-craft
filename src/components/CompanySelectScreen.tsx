@@ -27,7 +27,6 @@ import { RAW_COMPLEX_DATA } from '../data/complexes';
 import { formatKRW } from '../utils/formatters';
 import { sound } from '../utils/sound';
 import { VisitorCounter, PersonalRunBadge } from './VisitorCounter';
-import { CraftUniverseNavbar } from './CraftUniverseNavbar';
 import { DATABREW_PORTAL } from '../config/craftUniverse';
 
 export interface SavedGameSummary {
@@ -118,9 +117,6 @@ export const CompanySelectScreen: React.FC<Props> = ({
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between">
-      {/* Top data BREW & CRAFT UNIVERSE Global Brand Bar */}
-      <CraftUniverseNavbar showInGameControls={false} />
-
       <div className="max-w-6xl mx-auto w-full space-y-6 p-4 sm:p-8 flex-1">
         {/* Title Header */}
         <div className="text-center space-y-1">
