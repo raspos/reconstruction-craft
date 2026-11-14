@@ -9,7 +9,7 @@ import {
   ExternalLink,
   Coffee,
 } from 'lucide-react';
-import { CRAFT_UNIVERSE_BRAND, CRAFT_UNIVERSE_LINKS, DATABREW_PORTAL } from '../config/craftUniverse';
+import { DATABREW_PORTAL } from '../config/craftUniverse';
 import { sound } from '../utils/sound';
 
 interface Props {
@@ -90,26 +90,6 @@ export const CraftUniverseNavbar: React.FC<Props> = ({
             )}
           </div>
         </div>
-
-        {/* Center: Other Projects Switcher */}
-        <nav className="flex items-center gap-1.5 overflow-x-auto max-w-full py-0.5 scrollbar-none">
-          {CRAFT_UNIVERSE_LINKS.map((link) => (
-            <a
-              key={link.id}
-              href={link.url}
-              target={link.active ? '_self' : '_blank'}
-              rel="noopener noreferrer"
-              className={`px-2.5 py-1 rounded text-[11px] sm:text-xs flex items-center gap-1 font-pixel transition-colors whitespace-nowrap border ${
-                link.active
-                  ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold shadow-sm'
-                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-              }`}
-            >
-              <span>{link.nameKo}</span>
-              {!link.active && <ExternalLink className="w-2.5 h-2.5 opacity-60" />}
-            </a>
-          ))}
-        </nav>
 
         {/* Right Tools (Data Lab, Balance Simulator, Sound, Restart) */}
         {showInGameControls && (

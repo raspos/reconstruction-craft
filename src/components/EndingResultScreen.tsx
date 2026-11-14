@@ -260,7 +260,7 @@ export const EndingResultScreen: React.FC<Props> = ({
 
         {/* Official databrew Footer */}
         <footer className="pt-8 pb-4 text-center text-[11px] text-slate-500 border-t border-slate-900 max-w-xl mx-auto">
-          <div className="flex flex-wrap items-center justify-center gap-2 text-slate-400">
+          <div className="flex items-center justify-center gap-1.5 text-slate-400">
             <span>©</span>
             <a
               href="https://raspos.github.io/databrew/"
@@ -271,26 +271,6 @@ export const EndingResultScreen: React.FC<Props> = ({
               databrew
             </a>
             <span>. All rights reserved.</span>
-            <span className="text-slate-700">|</span>
-            <a
-              href="https://raspos.github.io/personnel-craft/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-300"
-            >
-              인사 크래프트
-            </a>
-            <span className="text-slate-700">·</span>
-            <a
-              href="https://raspos.github.io/hongdam-craft/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-300"
-            >
-              홍담 크래프트
-            </a>
-            <span className="text-slate-700">·</span>
-            <span className="text-amber-400 font-bold">재건축 크래프트</span>
           </div>
         </footer>
       </div>

@@ -548,26 +548,16 @@ export const App: React.FC = () => {
 
           <VisitorCounter />
 
-          <div className="flex items-center gap-3 text-[11px]">
+          <div className="flex items-center gap-2 text-[11px] text-slate-500">
             <a
-              href="https://raspos.github.io/personnel-craft/"
+              href="https://raspos.github.io/databrew/"
               target="_blank"
               rel="noreferrer"
-              className="text-slate-400 hover:text-slate-200 transition-colors"
+              className="text-[#f2c4a0] hover:text-white font-bold font-mono transition-colors"
             >
-              인사 크래프트
+              databrew
             </a>
-            <span>•</span>
-            <a
-              href="https://raspos.github.io/hongdam-craft/"
-              target="_blank"
-              rel="noreferrer"
-              className="text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              홍담 크래프트
-            </a>
-            <span>•</span>
-            <span className="text-slate-600">© databrew</span>
+            <span>© All rights reserved.</span>
           </div>
         </div>
       </footer>
