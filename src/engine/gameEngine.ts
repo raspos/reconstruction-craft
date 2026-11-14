@@ -38,7 +38,7 @@ export class GameEngine {
 
   constructor(
     playerCompanyId: string = 'taeseong',
-    gameMode: 'FULL_24' | 'FAST_12' = 'FULL_24',
+    gameMode: 'STANDARD_18' | 'FAST_12' = 'STANDARD_18',
     seed: number = Date.now(),
     targetOption?: PlayerTarget,
     scheduleMasterplanId: ScheduleMasterplanId = 'STANDARD'
@@ -56,11 +56,11 @@ export class GameEngine {
   // 초기 게임 상태 생성
   private initializeGameState(
     playerCompanyId: string,
-    gameMode: 'FULL_24' | 'FAST_12',
+    gameMode: 'STANDARD_18' | 'FAST_12',
     targetOption?: PlayerTarget,
     scheduleMasterplanId: ScheduleMasterplanId = 'STANDARD'
   ): GameState {
-    const totalTurns = gameMode === 'FULL_24' ? 24 : 12;
+    const totalTurns = gameMode === 'STANDARD_18' ? 18 : 12;
     const playerCompany =
       CONSTRUCTION_COMPANIES.find((c) => c.id === playerCompanyId) ||
       CONSTRUCTION_COMPANIES[0];
@@ -90,46 +90,80 @@ export class GameEngine {
       const supportScores: ComplexBiddingState['supportScores'] = {};
 
       CONSTRUCTION_COMPANIES.forEach((comp) => {
+        const isTarget = comp.targetComplexIds.includes(complex.id);
+        const isAvoided =
+          comp.avoidedComplexIds?.includes(complex.id) ||
+          complex.expectedCost > comp.attributes.capa * 0.55;
+
+        let generalBase = 28 + this.rng.range(-4, 6);
+        let execBase = 30 + this.rng.range(-8, 8);
+        let hiddenIntent = 30 + this.rng.range(-10, 10);
+        let isWithdrawn = false;
+
+        if (isTarget) {
+          generalBase = 52 + this.rng.range(-5, 8);
+          execBase = 50 + this.rng.range(-8, 8);
+          hiddenIntent = Math.min(
+            95,
+            Math.max(
+              65,
+              Math.round(
+                comp.attributes.brand * 0.4 +
+                  comp.attributes.salesOrg * 0.4 +
+                  this.rng.range(5, 20)
+              )
+            )
+          );
+        } else if (isAvoided) {
+          generalBase = 12 + this.rng.range(-3, 5);
+          execBase = 10 + this.rng.range(-5, 5);
+          hiddenIntent = 10;
+          isWithdrawn = comp.id !== playerCompanyId; // AI는 캐파초과/배제 단지 즉시 철수 처리
+        }
+
         const initialFavor = calculateFavorability({
           company: comp,
           complex,
-          generalSupportBase: 45 + this.rng.range(-10, 10),
-          execSupportBase: 40 + this.rng.range(-15, 15),
+          generalSupportBase: generalBase,
+          execSupportBase: execBase,
           brandPerceptionBase: comp.attributes.brand,
           costOfferedMarginDelta: 0,
           financeOfferedScore: comp.attributes.finance,
-          trustScore: 70,
+          trustScore: isTarget ? 78 : isAvoided ? 40 : 65,
         });
 
-        // 경쟁사 초기 숨겨진 입찰 의지 (30 ~ 80)
-        const hiddenIntent = Math.min(
-          95,
-          Math.max(20, Math.round(comp.attributes.brand * 0.4 + comp.attributes.salesOrg * 0.4 + this.rng.range(-15, 15)))
-        );
-
         const initialActions: ObservableCompetitorAction[] = [];
-        if (complex.startTurn === 1 && comp.id !== playerCompanyId && hiddenIntent >= 40) {
+        if (
+          complex.startTurn === 1 &&
+          comp.id !== playerCompanyId &&
+          isTarget &&
+          hiddenIntent >= 50
+        ) {
           initialActions.push({
             type: 'BANNER_AD',
             turn: 1,
-            description: `${comp.name} 브랜드 환영 현수막 및 안내문 부착`,
-            sincerityWeight: 0.3,
+            description: `${comp.name} 브랜드 환영 현수막 및 사전 안내문 부착`,
+            sincerityWeight: 0.35,
           });
         }
 
         supportScores[comp.id] = {
           hiddenBidIntent: hiddenIntent,
           observableActions: initialActions,
-          estimatedBidChance: Math.min(95, Math.max(15, hiddenIntent + this.rng.range(-15, 15))),
+          estimatedBidChance: isAvoided
+            ? 5
+            : isTarget
+            ? Math.min(95, Math.max(60, hiddenIntent + this.rng.range(-8, 8)))
+            : Math.min(50, Math.max(15, hiddenIntent)),
           intelReliability: 'LOW',
-          isWithdrawn: false,
+          isWithdrawn,
           hasBid: false,
           totalFavorability: initialFavor.totalFavorability,
           brandPerception: comp.attributes.brand,
           costOfferedMarginDelta: 0,
           financeOffered: comp.attributes.finance,
-          execSupport: 40,
-          trustScore: 70,
+          execSupport: execBase,
+          trustScore: isTarget ? 78 : isAvoided ? 40 : 65,
         };
       });
 
@@ -582,14 +616,38 @@ export class GameEngine {
 
       bState.monthsInStage += 1;
 
-      const stageDurationMap: Record<ComplexStage, number> = {
-        interest: 2,
-        pre_sales: 3,
-        bidding_prep: 2,
-        bidding: 2,
-        selection: 1,
-        contracted: 999,
-      };
+      // 18개월/12개월 모드에 맞춘 압축 단계 일정
+      const isFast = this.state.gameMode === 'FAST_12';
+      const stageDurationMap: Record<ComplexStage, number> = isFast
+        ? {
+            interest: 1,
+            pre_sales: 1,
+            bidding_prep: 1,
+            bidding: 1,
+            selection: 1,
+            contracted: 999,
+          }
+        : {
+            interest: 1,
+            pre_sales: 2,
+            bidding_prep: 1,
+            bidding: 1,
+            selection: 1,
+            contracted: 999,
+          };
+
+      // 게임 종료 임박 시 완결 보장 가속화 ("그 안에서 해결하도록")
+      const turnsRemaining = this.state.totalTurns - this.state.currentTurn;
+      if (turnsRemaining <= 2 && bState.currentStage !== 'selection') {
+        if (bState.currentStage === 'interest' || bState.currentStage === 'pre_sales') {
+          bState.currentStage = 'bidding_prep';
+        } else if (bState.currentStage === 'bidding_prep') {
+          bState.currentStage = 'bidding';
+        } else if (bState.currentStage === 'bidding') {
+          bState.currentStage = 'selection';
+        }
+        bState.monthsInStage = 0;
+      }
 
       if (bState.monthsInStage >= stageDurationMap[bState.currentStage]) {
         bState.monthsInStage = 0;
@@ -647,6 +705,41 @@ export class GameEngine {
 
     // 게임 종료 판정
     if (this.state.currentTurn > this.state.totalTurns) {
+      // 모든 미선정 단지 최종 총회 수의계약 완결 처리 ("그 안에서 해결하도록")
+      this.allComplexes.forEach((c) => {
+        const bs = this.state.complexStates[c.id];
+        if (bs && bs.currentStage !== 'contracted') {
+          const validBuilders = Object.entries(bs.supportScores)
+            .filter(([, s]) => !s.isWithdrawn)
+            .sort((a, b) => b[1].totalFavorability - a[1].totalFavorability);
+          const winnerId = validBuilders.length > 0 ? validBuilders[0][0] : 'taeseong';
+          const winnerComp = CONSTRUCTION_COMPANIES.find((comp) => comp.id === winnerId)!;
+          bs.winnerId = winnerId;
+          bs.currentStage = 'contracted';
+          bs.contractPrice = c.expectedCost;
+          bs.finalProfitMargin = c.baseExpectedProfitMargin;
+          bs.negotiatedContract = true;
+          bs.isSoleBid = true;
+
+          if (winnerId === this.state.playerCompanyId) {
+            this.state.usedCapa += c.expectedCost;
+          } else {
+            const cst = this.state.competitorStates[winnerId];
+            if (cst) {
+              cst.usedCapa += c.expectedCost;
+              cst.wonComplexIds.push(c.id);
+              cst.totalWonVolume += c.expectedCost;
+            }
+          }
+
+          this.state.turnLogs.push({
+            turn: this.state.totalTurns,
+            message: `[최종 계약 체결] ${c.name}이(가) 회기 종료 전 조합원 총회를 통해 ${winnerComp.name}과(와) 최종 시공 계약을 체결했습니다.`,
+            type: 'INFO',
+          });
+        }
+      });
+
       this.state.isGameOver = true;
       const evaluation = EndingEngine.evaluateGame(this.state, this.allComplexes);
       this.state.selectedEnding = evaluation.ending;
@@ -667,6 +760,30 @@ export class GameEngine {
         bState.supportScores[this.state.playerCompanyId]?.hasBid ||
         bState.supportScores[this.state.playerCompanyId]?.totalFavorability >= 25);
 
+    // 건설사별 기수주 단지 수 및 잔여 캐파 집계 (반독점 밸런스 평가용)
+    const builderWonCounts: Record<string, number> = {};
+    const builderRemainingCapas: Record<string, number> = {};
+
+    let playerWonCount = 0;
+    Object.values(this.state.complexStates).forEach((st) => {
+      if (st.winnerId === this.state.playerCompanyId) playerWonCount++;
+    });
+    builderWonCounts[this.state.playerCompanyId] = playerWonCount;
+    builderRemainingCapas[this.state.playerCompanyId] = Math.max(
+      0,
+      this.state.maxCapa - this.state.usedCapa
+    );
+
+    CONSTRUCTION_COMPANIES.forEach((comp) => {
+      if (comp.id === this.state.playerCompanyId) return;
+      const cst = this.state.competitorStates[comp.id];
+      builderWonCounts[comp.id] = cst?.wonComplexIds.length || 0;
+      builderRemainingCapas[comp.id] = Math.max(
+        0,
+        comp.attributes.capa - (cst?.usedCapa || 0)
+      );
+    });
+
     const voteResult = simulateGeneralAssemblyVote(
       complex,
       bState,
@@ -674,7 +791,9 @@ export class GameEngine {
       this.state.playerCompanyId,
       playerParticipates,
       bState.playerProposal,
-      bState.consortiumPartnerId
+      bState.consortiumPartnerId,
+      builderWonCounts,
+      builderRemainingCapas
     );
 
     bState.winnerId = voteResult.winnerId;
@@ -686,15 +805,40 @@ export class GameEngine {
     bState.finalProfitMargin = voteResult.finalProfitMargin;
 
     if (voteResult.isRebid) {
-      // 유찰 -> 다시 입찰 진행 단계로 복귀
-      bState.currentStage = 'bidding';
-      bState.monthsInStage = 0;
-      this.state.turnLogs.push({
-        turn: this.state.currentTurn,
-        message: `[입찰 유찰] ${voteResult.assemblySummary} (사유: ${voteResult.keyVoteFactor})`,
-        type: 'WARNING',
-      });
-      return;
+      const isUrgent = this.state.currentTurn >= this.state.totalTurns - 2;
+      if (bState.isRebid || isUrgent) {
+        // 2회차 유찰 또는 기한 임박 시 수의계약으로 전환하여 즉시 확정
+        const validBuilders = Object.entries(bState.supportScores)
+          .filter(([, s]) => !s.isWithdrawn)
+          .sort((a, b) => b[1].totalFavorability - a[1].totalFavorability);
+        const fallbackWinner = validBuilders.length > 0 ? validBuilders[0][0] : 'taeseong';
+        const fallbackComp = CONSTRUCTION_COMPANIES.find((c) => c.id === fallbackWinner)!;
+
+        bState.winnerId = fallbackWinner;
+        bState.isRebid = false;
+        bState.isSoleBid = true;
+        bState.negotiatedContract = true;
+        bState.contractPrice = complex.expectedCost;
+        bState.finalProfitMargin = complex.baseExpectedProfitMargin;
+        bState.currentStage = 'contracted';
+
+        this.state.turnLogs.push({
+          turn: this.state.currentTurn,
+          message: `[수의계약 전환] ${complex.name} 유찰 사태에 따라 조합 총회 의결로 ${fallbackComp.name}과(와) 전격 수의계약이 체결되었습니다.`,
+          type: 'INFO',
+        });
+      } else {
+        // 1회차 유찰 -> 다시 입찰 진행 단계로 복귀
+        bState.isRebid = true;
+        bState.currentStage = 'bidding';
+        bState.monthsInStage = 0;
+        this.state.turnLogs.push({
+          turn: this.state.currentTurn,
+          message: `[입찰 유찰] ${voteResult.assemblySummary} (사유: ${voteResult.keyVoteFactor})`,
+          type: 'WARNING',
+        });
+        return;
+      }
     }
 
     // 계약 완료 처리

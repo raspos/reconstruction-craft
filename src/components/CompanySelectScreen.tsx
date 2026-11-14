@@ -31,7 +31,7 @@ import { DATABREW_PORTAL } from '../config/craftUniverse';
 interface Props {
   onStartGame: (
     companyId: string,
-    gameMode: 'FULL_24' | 'FAST_12',
+    gameMode: 'STANDARD_18' | 'FAST_12',
     target: PlayerTarget,
     scheduleId: ScheduleMasterplanId
   ) => void;
@@ -39,7 +39,7 @@ interface Props {
 
 export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('taeseong');
-  const [gameMode, setGameMode] = useState<'FULL_24' | 'FAST_12'>('FULL_24');
+  const [gameMode, setGameMode] = useState<'STANDARD_18' | 'FAST_12'>('STANDARD_18');
   const [targetLevel, setTargetLevel] = useState<'SAFE' | 'CHALLENGE' | 'AGGRESSIVE' | 'RECKLESS'>('CHALLENGE');
   const [selectedScheduleId, setSelectedScheduleId] = useState<ScheduleMasterplanId>('STANDARD');
   const [showSchedulePreview, setShowSchedulePreview] = useState<boolean>(false);
@@ -191,6 +191,31 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
             {selectedCompany.flavorDescription}
           </p>
+
+          {/* Company Target Differentiation by Capacity */}
+          <div className="p-3 rounded-lg bg-slate-950/80 border border-amber-900/40 text-xs space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="font-pixel text-amber-400 font-bold">🎯 캐파 맞춤 주력 타깃:</span>
+              <div className="flex flex-wrap gap-1">
+                {selectedCompany.targetComplexIds.map((cid) => (
+                  <span
+                    key={cid}
+                    className="px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800 text-[10px] font-mono font-bold"
+                  >
+                    가온 {cid}단지
+                  </span>
+                ))}
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-300">
+              {selectedCompany.targetFocusDescription}
+            </p>
+            {selectedCompany.avoidedComplexIds && selectedCompany.avoidedComplexIds.length > 0 && (
+              <div className="text-[10px] text-rose-400/90 font-mono pt-0.5">
+                ⛔ 캐파 초과/리스크 배제 단지: {selectedCompany.avoidedComplexIds.map((id) => `${id}단지`).join(', ')}
+              </div>
+            )}
+          </div>
 
           {/* Stats Bar Breakdown */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono pt-1">
@@ -355,19 +380,19 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
               <button
                 onClick={() => {
                   sound.playClick();
-                  setGameMode('FULL_24');
+                  setGameMode('STANDARD_18');
                 }}
                 className={`p-3 rounded-lg border text-left transition-all ${
-                  gameMode === 'FULL_24'
-                    ? 'bg-sky-950/40 border-sky-500 shadow-md'
+                  gameMode === 'STANDARD_18'
+                    ? 'bg-sky-950/40 border-sky-500 shadow-md ring-1 ring-sky-500/50'
                     : 'bg-slate-950 border-slate-800 text-slate-400'
                 }`}
               >
                 <div className="font-pixel text-xs font-bold text-slate-200">
-                  정규 2년 모드 (총 24턴)
+                  표준 18개월 모드 (총 18턴)
                 </div>
-                <div className="text-[10px] text-slate-400 mt-1">
-                  15개 단지의 수주 일정을 월별로 심층 조율하는 표준 모드
+                <div className="text-[10px] text-slate-400 mt-1 leading-snug">
+                  1년 6개월 동안 15개 단지 수주전 및 계약을 100% 완결하는 정규 모드
                 </div>
               </button>
 
@@ -378,15 +403,15 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
                 }}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   gameMode === 'FAST_12'
-                    ? 'bg-sky-950/40 border-sky-500 shadow-md'
+                    ? 'bg-sky-950/40 border-sky-500 shadow-md ring-1 ring-sky-500/50'
                     : 'bg-slate-950 border-slate-800 text-slate-400'
                 }`}
               >
                 <div className="font-pixel text-xs font-bold text-slate-200">
-                  단축 1년 모드 (총 12턴)
+                  단축 12개월 모드 (총 12턴)
                 </div>
-                <div className="text-[10px] text-slate-400 mt-1">
-                  빠르고 박진감 넘치는 속전속결 수주전
+                <div className="text-[10px] text-slate-400 mt-1 leading-snug">
+                  1년 이내에 모든 단지의 시공사 선정을 끝마치는 속전속결 모드
                 </div>
               </button>
             </div>

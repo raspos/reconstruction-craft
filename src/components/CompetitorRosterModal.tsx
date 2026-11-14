@@ -121,12 +121,21 @@ export const CompetitorRosterModal: React.FC<Props> = ({
             const cState = competitorStates[company.id];
             const threatInfo = getThreatAnalysis(company.id);
 
-            // 해당 회사가 현재 높은 지지율(>40%)을 보이며 노리고 있는 단지들 탐색
-            const targetedComplexes = complexes.filter((c) => {
+            // 회사의 캐파/전략에 따른 주력 타깃 단지
+            const coreTargetComplexes = company.targetComplexIds
+              .map((id) => complexMap.get(id))
+              .filter((c): c is ComplexData => !!c);
+
+            // 현재 실제 활성 교전 중인 단지 (본입찰 선언 또는 높은 입찰 진정성)
+            const activeEngagedComplexes = complexes.filter((c) => {
               const bState = gameState.complexStates[c.id];
-              if (!bState || bState.winnerId) return false;
-              const supp = bState.supportScores[company.id]?.totalFavorability || 0;
-              return supp >= 40 && !bState.supportScores[company.id]?.isWithdrawn;
+              if (!bState || bState.winnerId || bState.currentStage === 'contracted') return false;
+              const supp = bState.supportScores[company.id];
+              return (
+                supp &&
+                !supp.isWithdrawn &&
+                (supp.hasBid || (supp.hiddenBidIntent >= 60 && supp.totalFavorability >= 55))
+              );
             });
 
             // 해당 회사가 이미 따낸 단지들
@@ -208,36 +217,64 @@ export const CompetitorRosterModal: React.FC<Props> = ({
                     )}
                   </div>
 
-                  {/* Right: Active Targets & Won List */}
-                  <div className="space-y-1.5 text-[11px]">
+                  {/* Right: Core Targets & Active Battles & Won List */}
+                  <div className="space-y-2 text-[11px]">
+                    {/* Core Targets by Capacity */}
                     <div>
-                      <span className="text-slate-400 font-pixel block mb-1">
-                        현재 집중 공략 중인 단지 ({targetedComplexes.length}곳):
-                      </span>
-                      {targetedComplexes.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {targetedComplexes.map((tc) => (
-                            <span
-                              key={tc.id}
-                              onClick={() => {
-                                onSelectComplex(tc.id);
-                                onClose();
-                              }}
-                              className="px-2 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-800 cursor-pointer text-[10px] font-mono flex items-center gap-1"
-                            >
-                              <Target className="w-2.5 h-2.5" />
-                              {tc.name}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-slate-500 italic text-[10px]">
-                          현재 유력한 주력 단지 없음 (관망 중)
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-amber-400 font-pixel font-bold flex items-center gap-1">
+                          <Target className="w-3 h-3 text-amber-400" />
+                          캐파 맞춤 집중 공략 단지 ({coreTargetComplexes.length}곳):
                         </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        {coreTargetComplexes.map((tc) => (
+                          <span
+                            key={tc.id}
+                            onClick={() => {
+                              onSelectComplex(tc.id);
+                              onClose();
+                            }}
+                            className="px-2 py-0.5 rounded bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-800 cursor-pointer text-[10px] font-mono flex items-center gap-1 font-bold"
+                          >
+                            {tc.name}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-slate-400 leading-snug">
+                        {company.targetFocusDescription}
+                      </p>
+                      {company.avoidedComplexIds && company.avoidedComplexIds.length > 0 && (
+                        <div className="text-[10px] text-rose-400/80 font-mono mt-0.5">
+                          ⛔ 캐파/리스크 배제: {company.avoidedComplexIds.map((id) => `${id}단지`).join(', ')}
+                        </div>
                       )}
                     </div>
 
-                    <div className="pt-1">
+                    {/* Active Engaged Battles */}
+                    {activeEngagedComplexes.length > 0 && (
+                      <div className="pt-1 border-t border-slate-900">
+                        <span className="text-slate-400 font-pixel block mb-1">
+                          현재 실시간 총력 교전 중 ({activeEngagedComplexes.length}곳):
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {activeEngagedComplexes.map((ac) => (
+                            <span
+                              key={ac.id}
+                              onClick={() => {
+                                onSelectComplex(ac.id);
+                                onClose();
+                              }}
+                              className="px-2 py-0.5 rounded bg-rose-950/60 text-rose-300 border border-rose-800 cursor-pointer text-[10px] font-mono flex items-center gap-1 animate-pulse"
+                            >
+                              🔥 {ac.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="pt-1 border-t border-slate-900">
                       <span className="text-slate-400 font-pixel block mb-1">
                         시공권 확보 완료 단지:
                       </span>

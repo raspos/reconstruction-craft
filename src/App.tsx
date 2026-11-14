@@ -63,7 +63,7 @@ export const App: React.FC = () => {
   // 게임 시작 (회사, 모드, 목표, 시공사 선정 일정 마스터플랜 설정)
   const handleStartGame = (
     companyId: string,
-    gameMode: 'FULL_24' | 'FAST_12',
+    gameMode: 'STANDARD_18' | 'FAST_12',
     target: PlayerTarget,
     scheduleId: ScheduleMasterplanId = 'STANDARD'
   ) => {

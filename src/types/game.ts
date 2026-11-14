@@ -143,6 +143,9 @@ export interface CompanyData {
   realModelHint: string;
   difficulty: 'EASY' | 'NORMAL' | 'HARD' | 'EXPERT';
   flavorDescription: string;
+  targetComplexIds: number[];       // 캐파 및 전략에 맞춘 집중 공략 단지 (2~4곳)
+  avoidedComplexIds?: number[];     // 캐파 초과 또는 리스크로 입찰 배제/기피 단지
+  targetFocusDescription: string;   // 타깃 단지 선정 전략 설명
 }
 
 export type ActionCategory = 'LEGAL' | 'RISKY';
@@ -318,7 +321,7 @@ export interface GameEnding {
 }
 
 export interface GameState {
-  gameMode: 'FULL_24' | 'FAST_12';
+  gameMode: 'STANDARD_18' | 'FAST_12';
   totalTurns: number;
   currentTurn: number;
   isGameOver: boolean;

@@ -169,29 +169,46 @@ export class AICompetitorEngine {
     gameState: GameState,
     remainingCapa: number
   ): number {
-    let score = 50;
+    // 1. 배제/기피 단지 또는 캐파 초과 시 원천 배제
+    if (company.avoidedComplexIds?.includes(complex.id)) {
+      return 0; // 입찰 기피 단지
+    }
 
-    // 캐파가 부족하면 감점
-    if (complex.expectedCost > remainingCapa) {
-      return 0; // 수행 불가
+    if (complex.expectedCost > remainingCapa * 0.9) {
+      return 0; // 캐파 한계 초과
+    }
+
+    // 2. 이미 수주한 단지 수가 많으면 추가 수주 욕구 대폭 감소 (반독점 밸런스)
+    const compState = gameState.competitorStates[company.id];
+    const wonCount = compState?.wonComplexIds.length || 0;
+    if (wonCount >= 2) {
+      return 0; // 2건 이상 수주 시 자사 리스크 관리로 신규 입찰 전면 중단
+    }
+
+    // 기본 점수: 지정된 주력 타깃 단지 여부에 따른 차등
+    const isTarget = company.targetComplexIds.includes(complex.id);
+    let score = isTarget ? 65 : 25;
+
+    if (wonCount === 1) {
+      score -= 20; // 1건 수주 후에는 입찰 기준이 대폭 엄격해짐
     }
 
     switch (company.personality) {
       case 'landmark_obsessed': // 7단지, 14단지 등 대형 랜드마크 집착
-        if (complex.plannedUnits >= 4000) score += 45;
-        if (complex.id === 7 || complex.id === 14) score += 35;
+        if (complex.plannedUnits >= 4000) score += 35;
+        if (complex.id === 7 || complex.id === 14) score += 30;
         break;
 
       case 'profit_conservative': // 안정적 마진 및 저위험 선호
-        if (complex.baseExpectedProfitMargin >= 5.5) score += 35;
-        if (complex.riskLevel === 'LOW') score += 25;
+        if (complex.baseExpectedProfitMargin >= 5.2) score += 30;
+        if (complex.riskLevel === 'LOW') score += 20;
         if (complex.riskLevel === 'EXTREME') score -= 40;
         break;
 
       case 'small_medium_focus': // 4, 8, 11, 15단지 등 중소형 알짜 집중
-        if (complex.plannedUnits <= 3000) score += 40;
+        if (complex.plannedUnits <= 3000) score += 35;
         if (complex.id === 15 || complex.id === 8 || complex.id === 4) score += 30;
-        if (complex.expectedCost >= 30000) score -= 30;
+        if (complex.expectedCost >= 25000) score -= 40;
         break;
 
       case 'finance_fighter': // 금융 민감 단지 선호
@@ -206,7 +223,7 @@ export class AICompetitorEngine {
         break;
 
       case 'aggressive_expansion': // 물불 가리지 않고 수주량 확대
-        score += 25;
+        score += 20;
         break;
 
       case 'opportunist': // 브랜드 효과가 좋거나 경쟁이 느슨한 곳
@@ -214,7 +231,7 @@ export class AICompetitorEngine {
         break;
 
       case 'stable_manager': // 1, 6단지 등 분쟁 적은 곳
-        if (complex.riskLevel === 'LOW') score += 30;
+        if (complex.riskLevel === 'LOW') score += 25;
         break;
     }
 

@@ -43,29 +43,31 @@ export function evaluateProposal(
   // 1. 브랜드 티어
   if (proposal.brandTier === 'HIGH_END') {
     marginDelta -= 0.5;
-    brandScore += 25;
+    brandScore += 22;
     cashBurden += 30;
+    pragmatistScore -= 5; // 하이엔드 분담금 인상 우려
   } else if (proposal.brandTier === 'STANDARD') {
     brandScore -= 15;
-    pragmatistScore += 5;
+    pragmatistScore += 8;
   }
 
   // 2. 천장고
   if (proposal.ceilingHeight === 2.7) {
     marginDelta -= 0.6;
     permitRisk += 10;
-    brandScore += 12;
-    pragmatistScore += 8;
+    brandScore += 10;
+    pragmatistScore += 4;
   } else if (proposal.ceilingHeight === 2.6) {
     marginDelta -= 0.3;
-    brandScore += 6;
+    brandScore += 5;
   }
 
   // 3. 외관
   if (proposal.facade === 'LANDMARK') {
     marginDelta -= 0.8;
-    brandScore += 24;
+    brandScore += 20;
     permitRisk += 12;
+    pragmatistScore -= 8; // 외관 특화 공사비 부풀리기 우려
   } else if (proposal.facade === 'SPECIALIZED') {
     marginDelta -= 0.4;
     brandScore += 12;
@@ -77,11 +79,12 @@ export function evaluateProposal(
   // 4. 커뮤니티 시설
   if (proposal.community === 'SUPER_LUXURY') {
     marginDelta -= 0.6;
-    brandScore += 15;
-    pragmatistScore += 10;
+    brandScore += 14;
+    pragmatistScore -= 5; // 커뮤니티 유지관리비 부담 우려
   } else if (proposal.community === 'BASIC') {
     marginDelta += 0.3;
     brandScore -= 12;
+    pragmatistScore += 6;
   }
 
   // 5. 조경
@@ -93,10 +96,10 @@ export function evaluateProposal(
   // 6. 주차장
   if (proposal.parking === 'SMART') {
     marginDelta -= 0.4;
-    pragmatistScore += 12;
+    pragmatistScore += 14;
   } else if (proposal.parking === 'EXTENDED') {
     marginDelta -= 0.2;
-    pragmatistScore += 6;
+    pragmatistScore += 8;
   }
 
   // 7. 공사비 할인
@@ -105,10 +108,10 @@ export function evaluateProposal(
     pragmatistScore += 35;
   } else if (proposal.costDiscount === 'AGGRESSIVE') {
     marginDelta -= 1.8;
-    pragmatistScore += 20;
+    pragmatistScore += 22;
   } else if (proposal.costDiscount === 'SMALL') {
     marginDelta -= 0.8;
-    pragmatistScore += 10;
+    pragmatistScore += 12;
   }
 
   // 8. 금융조건
@@ -119,7 +122,7 @@ export function evaluateProposal(
   } else if (proposal.financePackage === 'PREFERENTIAL') {
     marginDelta -= 0.4;
     cashBurden += Math.round(complex.expectedCost * 0.02);
-    pragmatistScore += 14;
+    pragmatistScore += 15;
   }
 
   // 9. 공사 기간
@@ -144,8 +147,9 @@ export function evaluateProposal(
   // 11. 설계 특화
   if (proposal.architectTier === 'GLOBAL_TOP') {
     marginDelta -= 0.7;
-    brandScore += 25;
+    brandScore += 20;
     permitRisk += 10;
+    pragmatistScore -= 6; // 해외 건축가 설계비 및 인허가 지연 우려
   } else if (proposal.architectTier === 'FAMOUS') {
     marginDelta -= 0.3;
     brandScore += 12;

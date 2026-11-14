@@ -48,7 +48,9 @@ export function simulateGeneralAssemblyVote(
   playerCompanyId: string,
   playerParticipates: boolean,
   playerProposal?: BidProposal,
-  consortiumPartnerId?: string | null
+  consortiumPartnerId?: string | null,
+  builderWonCounts: Record<string, number> = {},
+  builderRemainingCapas: Record<string, number> = {}
 ): VotingResult {
   const companyMap = new Map<string, CompanyData>(companies.map(c => [c.id, c]));
   const playerCompany = companyMap.get(playerCompanyId);
@@ -239,6 +241,27 @@ export function simulateGeneralAssemblyVote(
         floatingAppeal += 12;
       }
     });
+
+    // 4. 조합의 반독점 및 캐파 과부하(공기 지연 리스크) 페널티 (특정 건설사 독식 방지)
+    const alreadyWonCount = builderWonCounts[compId] || 0;
+    const remainingCapa = builderRemainingCapas[compId] ?? comp.attributes.capa;
+
+    if (alreadyWonCount === 1) {
+      // 1건 수주 상태: 주민들의 인력 분산 및 일정 지연 우려 발생
+      pragmatistAppeal -= 8;
+      floatingAppeal -= 8;
+    } else if (alreadyWonCount >= 2) {
+      // 2건 이상 수주 상태: 독점 횡포 우려 및 공기 지연/하자 위험에 대한 조합원들의 거센 경계
+      brandAppeal -= 12;
+      pragmatistAppeal -= 20;
+      floatingAppeal -= 20;
+    }
+
+    // 잔여 캐파 부족 시 추가 페널티
+    if (remainingCapa < complex.expectedCost * 1.3) {
+      pragmatistAppeal -= 14;
+      floatingAppeal -= 12;
+    }
 
     // 현장 분위기 랜덤성 (-5 ~ +5)
     const luckNoise = (Math.random() - 0.5) * 10;
