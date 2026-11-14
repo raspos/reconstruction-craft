@@ -28,14 +28,14 @@ class SeededRNG {
 }
 
 const COMPANIES = [
-  { id: 'taeseong', name: '태성건설', capa: 70000, brand: 92, funds: 92, costComp: 74, finance: 80, salesOrg: 75, targetComplexIds: [1, 7, 14], avoidedComplexIds: [4, 8, 15] },
-  { id: 'hangang', name: '한강건설', capa: 72000, brand: 88, funds: 88, costComp: 76, finance: 84, salesOrg: 82, targetComplexIds: [7, 10, 14], avoidedComplexIds: [6, 8, 11, 15] },
-  { id: 'daeryuk', name: '대륙건설', capa: 62000, brand: 83, funds: 80, costComp: 80, finance: 75, salesOrg: 94, targetComplexIds: [2, 5, 9, 13], avoidedComplexIds: [14] },
-  { id: 'mirae', name: '미래건설', capa: 58000, brand: 89, funds: 80, costComp: 76, finance: 78, salesOrg: 82, targetComplexIds: [1, 3, 6], avoidedComplexIds: [10, 14] },
-  { id: 'jungwoo', name: '정우건설', capa: 54000, brand: 82, funds: 85, costComp: 95, finance: 82, salesOrg: 72, targetComplexIds: [5, 8, 11, 12], avoidedComplexIds: [7, 14] },
-  { id: 'sewon', name: '세원건설', capa: 58000, brand: 85, funds: 84, costComp: 80, finance: 96, salesOrg: 80, targetComplexIds: [2, 12, 15], avoidedComplexIds: [14] },
-  { id: 'dongbang', name: '동방건설', capa: 48000, brand: 82, funds: 78, costComp: 82, finance: 76, salesOrg: 80, targetComplexIds: [3, 9, 10], avoidedComplexIds: [7, 14] },
-  { id: 'shinhwa', name: '신화건설', capa: 42000, brand: 78, funds: 74, costComp: 88, finance: 74, salesOrg: 78, targetComplexIds: [4, 8, 15], avoidedComplexIds: [1, 5, 7, 10, 14] },
+  { id: 'taeseong', name: '태성건설', capa: 70000, brand: 92, funds: 92, costComp: 74, finance: 80, salesOrg: 75, targetComplexIds: [1, 3, 5, 7, 9, 11, 13, 15], avoidedComplexIds: [] },
+  { id: 'hangang', name: '한강건설', capa: 72000, brand: 88, funds: 88, costComp: 76, finance: 84, salesOrg: 82, targetComplexIds: [2, 4, 6, 8, 10, 12, 14], avoidedComplexIds: [] },
+  { id: 'daeryuk', name: '대륙건설', capa: 62000, brand: 83, funds: 80, costComp: 80, finance: 75, salesOrg: 94, targetComplexIds: [7, 8, 11, 14], avoidedComplexIds: [] },
+  { id: 'mirae', name: '미래건설', capa: 58000, brand: 89, funds: 80, costComp: 76, finance: 78, salesOrg: 82, targetComplexIds: [2, 4, 9, 11, 12], avoidedComplexIds: [] },
+  { id: 'jungwoo', name: '정우건설', capa: 54000, brand: 82, funds: 85, costComp: 95, finance: 82, salesOrg: 72, targetComplexIds: [6, 7, 14], avoidedComplexIds: [] },
+  { id: 'sewon', name: '세원건설', capa: 58000, brand: 85, funds: 84, costComp: 80, finance: 96, salesOrg: 80, targetComplexIds: [1, 2, 4], avoidedComplexIds: [] },
+  { id: 'dongbang', name: '동방건설', capa: 48000, brand: 82, funds: 78, costComp: 82, finance: 76, salesOrg: 80, targetComplexIds: [2, 7, 11, 14], avoidedComplexIds: [] },
+  { id: 'shinhwa', name: '신화건설', capa: 42000, brand: 78, funds: 74, costComp: 88, finance: 74, salesOrg: 78, targetComplexIds: [8, 11, 15], avoidedComplexIds: [] },
 ];
 
 const COMPLEXES = [
@@ -126,6 +126,23 @@ function runSingleSimulation(gameIndex, strategy, rng) {
         let brandScore = comp.brand * 0.9;
         let pragmaticScore = comp.costComp * 0.75 + comp.finance * 0.25;
         let floatingScore = comp.salesOrg * 0.7 + comp.funds * 0.3;
+
+        // 우선 관심 단지 보너스
+        if (comp.targetComplexIds.includes(c.id)) {
+          floatingScore += 8;
+          brandScore += 4;
+        }
+
+        // 시장 선점/우호 단지 살짝 우대 (6 DL, 10 현대, 12 GS, 13 삼성)
+        const isPrecedent =
+          (c.id === 6 && comp.id === 'jungwoo') ||
+          (c.id === 10 && comp.id === 'hangang') ||
+          (c.id === 12 && comp.id === 'mirae') ||
+          (c.id === 13 && comp.id === 'taeseong');
+        if (isPrecedent) {
+          floatingScore += 6;
+          brandScore += 6;
+        }
 
         // 플레이어 전략 보정
         if (isPlayer) {

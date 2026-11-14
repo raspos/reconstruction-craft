@@ -91,30 +91,28 @@ export class GameEngine {
 
       CONSTRUCTION_COMPANIES.forEach((comp) => {
         const isTarget = comp.targetComplexIds.includes(complex.id);
-        const isAvoided = !isTarget; // 캐파 집중 외 단지는 기본 사전 불참(철수)
 
-        let generalBase = 12 + this.rng.range(-3, 3);
-        let execBase = 10 + this.rng.range(-4, 4);
-        let hiddenIntent = 0;
-        let isWithdrawn = comp.id !== playerCompanyId && !isTarget; // AI는 캐파 타깃 외 단지 원천 불참
-
-        if (isTarget) {
-          generalBase = 52 + this.rng.range(-5, 8);
-          execBase = 50 + this.rng.range(-8, 8);
-          hiddenIntent = Math.min(
-            95,
-            Math.max(
-              65,
-              Math.round(
-                comp.attributes.brand * 0.4 +
-                  comp.attributes.salesOrg * 0.4 +
-                  this.rng.range(5, 20)
+        // 기본 점수: 우선 관심 단지 vs 일반 관심 단지 (충분히 역전 가능한 완만한 격차)
+        let generalBase = isTarget ? 40 + this.rng.range(-3, 5) : 26 + this.rng.range(-3, 3);
+        let execBase = isTarget ? 38 + this.rng.range(-4, 5) : 24 + this.rng.range(-3, 3);
+        let trustScore = isTarget ? 68 + this.rng.range(-3, 4) : 50 + this.rng.range(-3, 3);
+        let hiddenIntent = isTarget
+          ? Math.min(
+              85,
+              Math.max(
+                50,
+                Math.round(
+                  comp.attributes.brand * 0.35 +
+                    comp.attributes.salesOrg * 0.35 +
+                    this.rng.range(5, 15)
+                )
               )
             )
-          );
-        }
+          : Math.min(45, Math.max(18, Math.round(this.rng.range(20, 35))));
 
-        // 시장 선점 단지 특별 우세 반영 (6단지 DL/정우, 10단지 현대/한강, 12단지 GS/미래, 13단지 삼성/태성)
+        const isWithdrawn = false; // 기본 상태에서는 어느 건설사도 원천 배제/철수되지 않고 시장에 상존
+
+        // 시장 선점 단지 특별 우세 살짝 반영 (6단지 DL/정우, 10단지 현대/한강, 12단지 GS/미래, 13단지 삼성/태성)
         const isHistoricalPrecedent =
           (complex.id === 6 && comp.id === 'jungwoo') ||
           (complex.id === 10 && comp.id === 'hangang') ||
@@ -122,10 +120,10 @@ export class GameEngine {
           (complex.id === 13 && comp.id === 'taeseong');
 
         if (isHistoricalPrecedent) {
-          generalBase += 12;
-          execBase += 14;
-          hiddenIntent = Math.min(95, hiddenIntent + 15);
-          isWithdrawn = false;
+          generalBase += 8;
+          execBase += 9;
+          hiddenIntent = Math.min(90, hiddenIntent + 12);
+          trustScore = Math.min(84, trustScore + 10);
         }
 
         const initialFavor = calculateFavorability({
@@ -136,7 +134,7 @@ export class GameEngine {
           brandPerceptionBase: comp.attributes.brand,
           costOfferedMarginDelta: 0,
           financeOfferedScore: comp.attributes.finance,
-          trustScore: isHistoricalPrecedent ? 85 : isTarget ? 78 : 35,
+          trustScore,
         });
 
         const initialActions: ObservableCompetitorAction[] = [];
@@ -144,8 +142,8 @@ export class GameEngine {
           initialActions.push({
             type: 'BANNER_AD',
             turn: 1,
-            description: `${comp.name} 사전 정비계획 협력 및 하이엔드 브랜드 특화 설명회 개최 완료`,
-            sincerityWeight: 0.5,
+            description: `${comp.name} 사전 정비계획 협력 및 브랜드 특화 사전 교감 진행`,
+            sincerityWeight: 0.45,
           });
         } else if (
           complex.startTurn === 1 &&
@@ -156,7 +154,7 @@ export class GameEngine {
           initialActions.push({
             type: 'BANNER_AD',
             turn: 1,
-            description: `${comp.name} 브랜드 환영 현수막 및 사전 안내문 부착`,
+            description: `${comp.name} 우선 관심 단지 지정 및 현장 홍보 안내문 부착`,
             sincerityWeight: 0.35,
           });
         }
@@ -164,18 +162,19 @@ export class GameEngine {
         supportScores[comp.id] = {
           hiddenBidIntent: hiddenIntent,
           observableActions: initialActions,
-          estimatedBidChance: !isTarget
-            ? 0
-            : Math.min(95, Math.max(60, hiddenIntent + this.rng.range(-8, 8))),
-          intelReliability: isTarget ? 'LOW' : 'HIGH',
+          estimatedBidChance: Math.min(
+            90,
+            Math.max(15, Math.round(hiddenIntent + this.rng.range(-6, 6)))
+          ),
+          intelReliability: isTarget ? 'LOW' : 'MID',
           isWithdrawn,
           hasBid: false,
-          totalFavorability: isTarget ? initialFavor.totalFavorability : Math.min(25, initialFavor.totalFavorability),
+          totalFavorability: initialFavor.totalFavorability,
           brandPerception: comp.attributes.brand,
           costOfferedMarginDelta: 0,
           financeOffered: comp.attributes.finance,
           execSupport: execBase,
-          trustScore: isHistoricalPrecedent ? 85 : isTarget ? 78 : 35,
+          trustScore,
         };
       });
 

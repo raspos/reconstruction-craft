@@ -224,7 +224,7 @@ export const CompetitorRosterModal: React.FC<Props> = ({
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-amber-400 font-pixel font-bold flex items-center gap-1">
                           <Target className="w-3 h-3 text-amber-400" />
-                          캐파 맞춤 집중 공략 단지 ({coreTargetComplexes.length}곳):
+                          우선 관심 단지 ({coreTargetComplexes.length}곳):
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-1 mb-1">
@@ -244,6 +244,9 @@ export const CompetitorRosterModal: React.FC<Props> = ({
                       <p className="text-[10px] text-slate-400 leading-snug">
                         {company.targetFocusDescription}
                       </p>
+                      <div className="text-[10px] text-sky-400/80 font-mono mt-0.5">
+                        ※ 높은 초기 관심도 단지이며, 당사의 적극적인 영업 전략으로 충분히 표심을 뒤집을 수 있습니다.
+                      </div>
                       {company.avoidedComplexIds && company.avoidedComplexIds.length > 0 && (
                         <div className="text-[10px] text-rose-400/80 font-mono mt-0.5">
                           ⛔ 캐파/리스크 배제: {company.avoidedComplexIds.map((id) => `${id}단지`).join(', ')}

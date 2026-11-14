@@ -50,12 +50,11 @@ export const ComplexDetailModal: React.FC<Props> = ({
   const mySupport = bState?.supportScores[gameState.playerCompanyId];
   const myScore = mySupport?.totalFavorability || 0;
 
-  // 경쟁사 지지율 목록 (자사 캐파에 따라 본 사업장에 실제 참여 중인 유효 경쟁사만 선별)
+  // 경쟁사 지지율 목록 (본 사업장에 참여 중인 유효 경쟁사)
   const rivalScores = Object.entries(bState?.supportScores || {})
     .filter(([id, s]) => {
       if (id === gameState.playerCompanyId) return false;
-      const comp = CONSTRUCTION_COMPANIES.find((c) => c.id === id);
-      return comp && comp.targetComplexIds.includes(complex.id) && !s.isWithdrawn;
+      return !s.isWithdrawn;
     })
     .map(([id, s]) => ({ id, ...s }))
     .sort((a, b) => b.totalFavorability - a.totalFavorability);
@@ -298,7 +297,7 @@ export const ComplexDetailModal: React.FC<Props> = ({
             {/* Competitor Chips in this complex */}
             <div className="pt-2 border-t border-slate-900">
               <span className="text-[11px] text-slate-400 font-pixel block mb-1.5">
-                이 단지 캐파 맞춤 집중 공략 경쟁 건설사 ({rivalScores.length}곳):
+                경쟁 건설사 동향 ({rivalScores.length}곳):
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {rivalScores.length === 0 ? (
@@ -309,13 +308,20 @@ export const ComplexDetailModal: React.FC<Props> = ({
                   rivalScores.map((rival) => {
                     const comp = CONSTRUCTION_COMPANIES.find((c) => c.id === rival.id);
                     if (!comp) return null;
+                    const isTarget = comp.targetComplexIds.includes(complex.id);
+                    const isPrecedent =
+                      (complex.id === 6 && comp.id === 'jungwoo') ||
+                      (complex.id === 10 && comp.id === 'hangang') ||
+                      (complex.id === 12 && comp.id === 'mirae') ||
+                      (complex.id === 13 && comp.id === 'taeseong');
+
                     return (
                       <div
                         key={rival.id}
                         className={`px-2 py-1 rounded text-[11px] font-mono border flex items-center gap-1.5 ${
                           rival.isWithdrawn
                             ? 'bg-slate-900 text-slate-500 border-slate-800 line-through'
-                            : rival.totalFavorability >= 60
+                            : rival.totalFavorability >= 55
                             ? 'bg-rose-950/60 text-rose-300 border-rose-700/80 font-bold'
                             : 'bg-slate-900 text-slate-300 border-slate-800'
                         }`}
@@ -325,6 +331,15 @@ export const ComplexDetailModal: React.FC<Props> = ({
                           style={{ backgroundColor: comp.color }}
                         />
                         <span>{comp.name}</span>
+                        {isPrecedent ? (
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                            유력
+                          </span>
+                        ) : isTarget ? (
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                            우선
+                          </span>
+                        ) : null}
                         <strong className="text-amber-400">
                           {rival.isWithdrawn ? '철수' : `${rival.totalFavorability}%`}
                         </strong>
@@ -334,7 +349,7 @@ export const ComplexDetailModal: React.FC<Props> = ({
                 )}
               </div>
               <div className="text-[10px] text-slate-500 font-mono mt-1">
-                ※ 타 건설사들은 자사 시공 캐파 및 선별 수주 전략에 따라 본 사업장에 불참(타 단지 집중)했습니다.
+                ※ [우선 관심] 표기 건설사는 사전 선호도가 높지만, 당사의 전략적 영업 및 제안서 조건으로 충분히 표심을 뒤집을 수 있습니다.
               </div>
             </div>
 

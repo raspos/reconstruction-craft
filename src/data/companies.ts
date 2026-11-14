@@ -29,9 +29,9 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 74,
       riskTolerance: 35,  // 불법/위험 영업 회피
     },
-    targetComplexIds: [1, 7, 13, 14], // 대형 랜드마크 및 13단지 선별 집중
-    avoidedComplexIds: [4, 8, 15], // 소형 실속 단지는 브랜드 프리미엄 훼손 우려로 직접 입찰 배제
-    targetFocusDescription: '1·7·14단지 랜드마크와 더불어, 래미안 브랜드 선호도가 탄탄한 13단지를 핵심 공략 단지로 선별합니다.',
+    targetComplexIds: [1, 3, 5, 7, 9, 11, 13, 15], // 삼성물산 모티브: 홀수 단지 우선 관심
+    avoidedComplexIds: [],
+    targetFocusDescription: '가온 신시가지 홀수 단지(1·3·5·7·9·11·13·15단지)에 높은 사전 관심도를 두고 있습니다.',
   },
   {
     id: 'hangang',
@@ -56,9 +56,9 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 76,
       riskTolerance: 72,
     },
-    targetComplexIds: [2, 7, 10, 14], // 신시가지 매머드 랜드마크 및 2단지 집중
-    avoidedComplexIds: [6, 8, 11, 15], // 소형 실속 단지 기피
-    targetFocusDescription: '2단지·7단지·14단지와 더불어 남부 핵심 거점으로 사전 정지작업을 마친 10단지(디에이치)를 정조준합니다.',
+    targetComplexIds: [2, 4, 6, 8, 10, 12, 14], // 현대건설 모티브: 짝수 단지 우선 관심
+    avoidedComplexIds: [],
+    targetFocusDescription: '가온 신시가지 짝수 단지(2·4·6·8·10·12·14단지)에 높은 사전 관심도를 두고 있습니다.',
   },
   {
     id: 'daeryuk',
@@ -83,9 +83,9 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 80,
       riskTolerance: 80,
     },
-    targetComplexIds: [2, 5, 9, 13], // 사업성 높고 영업력으로 뒤집을 수 있는 중대형 사업장
-    avoidedComplexIds: [14], // 14단지는 초대형 리스크로 단독 참여 기피
-    targetFocusDescription: '2단지·5단지·9단지·13단지 등 현장 영업 기동력으로 표심을 뒤흔들 수 있는 중대형 단지를 주력 공략합니다.',
+    targetComplexIds: [7, 8, 11, 14], // 대우건설 모티브: 7, 8, 11, 14단지 우선 관심
+    avoidedComplexIds: [],
+    targetFocusDescription: '7단지·8단지·11단지·14단지에 높은 사전 관심도를 두고 있습니다.',
   },
   {
     id: 'mirae',
@@ -110,9 +110,9 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 76,
       riskTolerance: 65,
     },
-    targetComplexIds: [1, 3, 12], // 주거환경 우수 및 12단지 금융 패키지 선점
-    avoidedComplexIds: [10, 14], // 초대형 출혈 경쟁 단지 회피
-    targetFocusDescription: '1단지·3단지(디자인 특화) 및 파격적인 이주비/금융 패키지로 표심을 선점한 12단지(자이)에 역량을 집중합니다.',
+    targetComplexIds: [2, 4, 9, 11, 12], // GS건설 모티브: 2, 4, 9, 11, 12단지 우선 관심
+    avoidedComplexIds: [],
+    targetFocusDescription: '2단지·4단지·9단지·11단지·12단지에 높은 사전 관심도를 두고 있습니다.',
   },
   {
     id: 'jungwoo',
@@ -137,9 +137,9 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 95,       // 원가 경쟁력 1위 (버프)
       riskTolerance: 40,
     },
-    targetComplexIds: [5, 6, 8, 11], // 6단지 신통 급행 텃밭 및 실리파 알짜 단지
-    avoidedComplexIds: [7, 14], // 외관 출혈 경쟁이 심하고 마진이 박한 매머드 단지 제외
-    targetFocusDescription: '신속통합 단계부터 탄탄한 입지를 굳혀둔 6단지(아크로 특화) 및 5·8·11단지 등 알짜 실속 사업장에 집중합니다.',
+    targetComplexIds: [6, 7, 14], // DL이앤씨 모티브: 6, 7, 14단지 우선 관심
+    avoidedComplexIds: [],
+    targetFocusDescription: '6단지·7단지·14단지에 높은 사전 관심도를 두고 있습니다.',
   },
   {
     id: 'sewon',
@@ -164,9 +164,9 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 80,
       riskTolerance: 70,
     },
-    targetComplexIds: [4, 11, 12, 15], // 이주비 및 사업비 대여 등 금융조건 민감 단지
-    avoidedComplexIds: [14], // 초대형 단지 단독 참여 기피
-    targetFocusDescription: '4단지·11단지·12단지·15단지 등 조합원 이주비와 금융 패키지를 최우선으로 평가하는 사업장에 화력을 쏟아붓습니다.',
+    targetComplexIds: [1, 2, 4], // 포스코이앤씨 모티브: 1, 2, 4단지 우선 관심
+    avoidedComplexIds: [],
+    targetFocusDescription: '1단지·2단지·4단지에 높은 사전 관심도를 두고 있습니다.',
   },
   {
     id: 'dongbang',
@@ -191,9 +191,9 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 82,
       riskTolerance: 62,
     },
-    targetComplexIds: [3, 9, 10], // 상업·교통 요충지 및 라이벌 격돌지
-    avoidedComplexIds: [7, 14], // 캐파 한계로 3조원대 매머드 단지 입찰 제외
-    targetFocusDescription: '3단지·9단지·10단지 등 복합 상업 인프라 가치와 라이벌 견제가 가능한 전략 단지에 집중합니다.',
+    targetComplexIds: [2, 7, 11, 14], // 롯데건설 모티브: 2, 7, 11, 14단지 우선 관심
+    avoidedComplexIds: [],
+    targetFocusDescription: '2단지·7단지·11단지·14단지에 높은 사전 관심도를 두고 있습니다.',
   },
   {
     id: 'shinhwa',
@@ -218,8 +218,8 @@ export const CONSTRUCTION_COMPANIES: CompanyData[] = [
       costComp: 88,       // 원가 경쟁력 우수 (버프)
       riskTolerance: 88,  // 위험 감내력 최고
     },
-    targetComplexIds: [4, 8, 15], // 1조~1.7조원대 소형 알짜 틈새 단지 선점
-    avoidedComplexIds: [1, 5, 7, 10, 14], // 2조원대 중후반 및 매머드 단지는 보증금/캐파 초과로 원천 배제
-    targetFocusDescription: '4단지·8단지·15단지 등 1조원대 소형 알짜 단지를 기습 선점하며, 캐파를 초과하는 대형 단지는 원천 배제합니다.',
+    targetComplexIds: [8, 11, 15], // HDC현대산업개발 모티브: 8, 11, 15단지 우선 관심
+    avoidedComplexIds: [],
+    targetFocusDescription: '8단지·11단지·15단지에 높은 사전 관심도를 두고 있습니다.',
   },
 ];

@@ -208,11 +208,6 @@ export class AICompetitorEngine {
     gameState: GameState,
     remainingCapa: number
   ): number {
-    // 0. 자사 시공 캐파에 따른 지정 타깃 단지가 아니면 입찰 원천 배제
-    if (!company.targetComplexIds.includes(complex.id)) {
-      return 0;
-    }
-
     // 1. 배제/기피 단지 또는 캐파 초과 시 원천 배제
     if (company.avoidedComplexIds?.includes(complex.id)) {
       return 0; // 입찰 기피 단지
@@ -229,9 +224,19 @@ export class AICompetitorEngine {
       return 0; // 단일 건설사 최대 5개 단지 제한: 추가 입찰 및 영업 전면 차단
     }
 
-    // 기본 점수: 지정된 주력 타깃 단지 여부에 따른 차등
+    // 기본 점수: 지정된 우선 관심 단지(타깃) 여부에 따른 차등 (우선 관심 65 vs 일반 28)
     const isTarget = company.targetComplexIds.includes(complex.id);
-    let score = isTarget ? 65 : 25;
+    let score = isTarget ? 65 : 28;
+
+    // 기선점/우호 단지 살짝 우대 (6 DL, 10 현대, 12 GS, 13 삼성)
+    const isHistoricalPrecedent =
+      (complex.id === 6 && company.id === 'jungwoo') ||
+      (complex.id === 10 && company.id === 'hangang') ||
+      (complex.id === 12 && company.id === 'mirae') ||
+      (complex.id === 13 && company.id === 'taeseong');
+    if (isHistoricalPrecedent) {
+      score += 15;
+    }
 
     if (wonCount === 4) {
       score -= 35; // 4건 수주 시 마지막 5번째 단지는 매우 보수적으로 판단
