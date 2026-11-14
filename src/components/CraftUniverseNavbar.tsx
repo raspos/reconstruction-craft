@@ -7,20 +7,23 @@ import {
   BookOpen,
   BarChart3,
   ExternalLink,
+  Coffee,
 } from 'lucide-react';
-import { CRAFT_UNIVERSE_BRAND, CRAFT_UNIVERSE_LINKS } from '../config/craftUniverse';
+import { CRAFT_UNIVERSE_BRAND, CRAFT_UNIVERSE_LINKS, DATABREW_PORTAL } from '../config/craftUniverse';
 import { sound } from '../utils/sound';
 
 interface Props {
-  onOpenDataLab: () => void;
-  onOpenSimulator: () => void;
-  onResetGame: () => void;
+  onOpenDataLab?: () => void;
+  onOpenSimulator?: () => void;
+  onResetGame?: () => void;
+  showInGameControls?: boolean;
 }
 
 export const CraftUniverseNavbar: React.FC<Props> = ({
   onOpenDataLab,
   onOpenSimulator,
   onResetGame,
+  showInGameControls = true,
 }) => {
   const [muted, setMuted] = useState(!sound.enabled);
 
@@ -36,40 +39,62 @@ export const CraftUniverseNavbar: React.FC<Props> = ({
         {/* Brand & Universe Identity */}
         <div className="flex items-center justify-between w-full md:w-auto gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-amber-500 border border-amber-300 flex items-center justify-center text-slate-950 shadow-md shrink-0 font-bold">
-              <Building2 className="w-5 h-5 text-slate-950" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-pixel text-[10px] px-1.5 py-0.5 rounded bg-amber-950/90 border border-amber-500/70 text-amber-300 font-bold tracking-wider">
-                  {CRAFT_UNIVERSE_BRAND.title}
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
-                  EPISODE 3
-                </span>
+            {/* data BREW Hub Button */}
+            <a
+              href={DATABREW_PORTAL.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2.5 py-1.5 rounded-lg bg-[#062433] border border-[#f2c4a0]/40 hover:border-[#f2c4a0] flex items-center gap-1.5 transition-all shadow-sm group shrink-0"
+              title="데이터브루(data BREW) 포털 홈으로 이동"
+            >
+              <span className="w-2 h-2 rounded-full bg-[#f2c4a0] group-hover:scale-125 transition-transform" />
+              <span className="font-pixel text-[11px] font-bold text-[#f2c4a0] tracking-tight group-hover:text-white">
+                data BREW
+              </span>
+              <ExternalLink className="w-2.5 h-2.5 text-[#f2c4a0]/70 group-hover:text-white" />
+            </a>
+
+            <div className="h-4 w-[1px] bg-slate-800 hidden sm:block" />
+
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-500 border border-amber-300 flex items-center justify-center text-slate-950 shadow-md shrink-0 font-bold">
+                <Building2 className="w-4 h-4 text-slate-950" />
               </div>
-              <h1 className="font-pixel text-sm sm:text-base text-white font-extrabold tracking-tight whitespace-nowrap leading-none mt-0.5">
-                재건축 크래프트 <span className="text-amber-400 text-xs sm:text-sm font-normal">시공사 수주전쟁</span>
-              </h1>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-pixel text-[9px] px-1 py-0.2 rounded bg-amber-950/90 border border-amber-500/70 text-amber-300 font-bold">
+                    CRAFT UNIVERSE Ep.3
+                  </span>
+                </div>
+                <h1 className="font-pixel text-xs sm:text-sm text-white font-extrabold tracking-tight whitespace-nowrap leading-none mt-0.5">
+                  재건축 크래프트 <span className="text-amber-400 font-normal">시공사 수주전쟁</span>
+                </h1>
+              </div>
             </div>
           </div>
 
           {/* Mobile Right Controls */}
           <div className="flex items-center gap-1.5 md:hidden">
-            <button
-              onClick={toggleSound}
-              className="p-1.5 rounded bg-slate-800 text-slate-300 hover:text-white"
-              title={muted ? '소리 켜기' : '소리 끄기'}
-            >
-              {muted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-            </button>
-            <button
-              onClick={onResetGame}
-              className="p-1.5 rounded bg-slate-800 text-slate-300 hover:text-red-400"
-              title="게임 다시 시작"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
+            {showInGameControls && (
+              <>
+                <button
+                  onClick={toggleSound}
+                  className="p-1.5 rounded bg-slate-800 text-slate-300 hover:text-white"
+                  title={muted ? '소리 켜기' : '소리 끄기'}
+                >
+                  {muted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+                </button>
+                {onResetGame && (
+                  <button
+                    onClick={onResetGame}
+                    className="p-1.5 rounded bg-slate-800 text-slate-300 hover:text-red-400"
+                    title="게임 다시 시작"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -81,7 +106,7 @@ export const CraftUniverseNavbar: React.FC<Props> = ({
               href={link.url}
               target={link.active ? '_self' : '_blank'}
               rel="noopener noreferrer"
-              className={`px-2.5 py-1 rounded text-xs flex items-center gap-1 font-pixel transition-colors whitespace-nowrap border ${
+              className={`px-2 sm:px-2.5 py-1 rounded text-[11px] sm:text-xs flex items-center gap-1 font-pixel transition-colors whitespace-nowrap border ${
                 link.active
                   ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold shadow-sm'
                   : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
@@ -99,45 +124,53 @@ export const CraftUniverseNavbar: React.FC<Props> = ({
         </nav>
 
         {/* Right Tools (Data Lab, Balance Simulator, Sound, Restart) */}
-        <div className="hidden md:flex items-center gap-2">
-          <button
-            onClick={() => {
-              sound.playClick();
-              onOpenDataLab();
-            }}
-            className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center gap-1.5 border border-slate-700 font-pixel"
-          >
-            <BookOpen className="w-3.5 h-3.5 text-sky-400" />
-            <span>데이터 출처</span>
-          </button>
+        {showInGameControls && (
+          <div className="hidden md:flex items-center gap-2">
+            {onOpenDataLab && (
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  onOpenDataLab();
+                }}
+                className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center gap-1.5 border border-slate-700 font-pixel"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-sky-400" />
+                <span>데이터 출처</span>
+              </button>
+            )}
 
-          <button
-            onClick={() => {
-              sound.playClick();
-              onOpenSimulator();
-            }}
-            className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center gap-1.5 border border-slate-700 font-pixel"
-          >
-            <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
-            <span>시뮬레이터 검증</span>
-          </button>
+            {onOpenSimulator && (
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  onOpenSimulator();
+                }}
+                className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center gap-1.5 border border-slate-700 font-pixel"
+              >
+                <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>시뮬레이터 검증</span>
+              </button>
+            )}
 
-          <button
-            onClick={toggleSound}
-            className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700"
-            title={muted ? '소리 켜기' : '소리 끄기'}
-          >
-            {muted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-          </button>
+            <button
+              onClick={toggleSound}
+              className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700"
+              title={muted ? '소리 켜기' : '소리 끄기'}
+            >
+              {muted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+            </button>
 
-          <button
-            onClick={onResetGame}
-            className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-red-400 border border-slate-700"
-            title="게임 다시 시작"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-        </div>
+            {onResetGame && (
+              <button
+                onClick={onResetGame}
+                className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-red-400 border border-slate-700"
+                title="게임 다시 시작"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

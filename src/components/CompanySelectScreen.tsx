@@ -25,6 +25,8 @@ import { RAW_COMPLEX_DATA } from '../data/complexes';
 import { formatKRW } from '../utils/formatters';
 import { sound } from '../utils/sound';
 import { VisitorCounter, PersonalRunBadge } from './VisitorCounter';
+import { CraftUniverseNavbar } from './CraftUniverseNavbar';
+import { DATABREW_PORTAL } from '../config/craftUniverse';
 
 interface Props {
   onStartGame: (
@@ -97,8 +99,11 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-4 sm:p-8">
-      <div className="max-w-6xl mx-auto w-full space-y-6">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between">
+      {/* Top data BREW & CRAFT UNIVERSE Global Brand Bar */}
+      <CraftUniverseNavbar showInGameControls={false} />
+
+      <div className="max-w-6xl mx-auto w-full space-y-6 p-4 sm:p-8 flex-1">
         {/* Title Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/50 text-amber-400 text-xs font-pixel">
@@ -410,6 +415,45 @@ export const CompanySelectScreen: React.FC<Props> = ({ onStartGame }) => {
             <VisitorCounter />
           </div>
         </div>
+
+        {/* Official databrew & CRAFT UNIVERSE Footer */}
+        <footer className="pt-8 pb-4 text-center text-[11px] text-slate-500 border-t border-slate-900 space-y-2 max-w-xl mx-auto">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-slate-400">
+            <span>©</span>
+            <a
+              href={DATABREW_PORTAL.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#f2c4a0] hover:text-white underline font-bold transition-colors font-mono"
+            >
+              databrew
+            </a>
+            <span>. All rights reserved.</span>
+            <span className="text-slate-700">|</span>
+            <a
+              href="https://raspos.github.io/personnel-craft/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-slate-300"
+            >
+              인사 크래프트
+            </a>
+            <span className="text-slate-700">·</span>
+            <a
+              href="https://raspos.github.io/hongdam-craft/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-slate-300"
+            >
+              홍담 크래프트
+            </a>
+            <span className="text-slate-700">·</span>
+            <span className="text-amber-400 font-bold">재건축 크래프트</span>
+          </div>
+          <p className="text-[10px] text-slate-600">
+            데이터저널리즘 가상 시뮬레이션 인터랙티브 프로젝트 · CRAFT UNIVERSE Episode 3
+          </p>
+        </footer>
       </div>
     </div>
   );

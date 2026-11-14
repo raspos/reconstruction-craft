@@ -8,6 +8,14 @@ export interface CraftUniverseNavLink {
   active?: boolean;
 }
 
+export const DATABREW_PORTAL = {
+  name: 'data BREW',
+  nameKo: '데이터브루',
+  url: 'https://raspos.github.io/databrew/',
+  tagline: '독립 데이터저널리즘 프로젝트',
+  copyright: '© databrew. All rights reserved.',
+};
+
 export const CRAFT_UNIVERSE_BRAND = {
   title: 'CRAFT UNIVERSE',
   subtitleKo: '한국형 기업 생존 시뮬레이션 유니버스',
